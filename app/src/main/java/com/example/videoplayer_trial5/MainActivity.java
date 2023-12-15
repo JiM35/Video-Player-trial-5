@@ -2,9 +2,11 @@ package com.example.videoplayer_trial5;
 
 import static com.example.videoplayer_trial5.AllowAccessActivity.REQUEST_PERMISSION_SETTING;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -15,6 +17,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -26,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> allFolderList = new ArrayList<>();
     RecyclerView recyclerView;
     VideoFoldersAdapter adapter;
+    SwipeRefreshLayout swipeRefreshLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,7 +46,17 @@ public class MainActivity extends AppCompatActivity {
         }
 //        Below if statement we have to allocate memory to recyclerView using id
         recyclerView = findViewById(R.id.folders_rv);
+        //        Allocate memory to swipeRefreshLayout
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_folders);
         showFolder();
+//        setOnRefreshListener will call when user swipes down for refreshing the layout and when the user swipes down the showFolder method will refresh the adapter and swipeRefreshLayout.setRefreshing(false) will hide the refresh layout.
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                showFolder();
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
     }
 
     //     Here we are going to initialize the adapter
@@ -83,4 +99,46 @@ public class MainActivity extends AppCompatActivity {
         }
         return mediaFilesArrayList;
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.folder_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+
+/* Video Player App in Android Studio (Part 5) | Swipe to Refresh folders, Rate and Share App - 10:21
+https://www.youtube.com/watch?v=Bnhl59v-66c&list=PLrEWK4N0Og0219lp6qxiOU5pSO8hhESUS&index=6 */
+
+//    @SuppressLint("NonConstantResourceId")
+//    @Override
+//    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+//        int id = item.getItemId();
+//        switch (id) {
+//            case R.id.rateus:
+//                Uri uri = Uri.parse("https://play.google.com/store/apps/details?id=" + getApplicationContext().getPackageName());
+//                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+//                startActivity(intent);
+//                break;
+//            case R.id.refresh_folders:
+//                finish();
+//                startActivity(getIntent());  // It will refresh activity
+//                break;
+//            case R.id.share_app:
+//                Intent share_intent = new Intent();
+//                share_intent.setAction(Intent.ACTION_SEND);
+//                share_intent.putExtra(Intent.EXTRA_TEXT, "Check this app via\n" + "https://play.google.com/store/apps/details?id=" + getApplicationContext().getPackageName());
+//                share_intent.setType("text/plain");
+//                startActivity(Intent.createChooser(share_intent, "Share app via"));
+//                break;
+//        }
+//        return true;
+//    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        Toast.makeText(this, "This action is not implemented yet", Toast.LENGTH_SHORT).show();
+        return true;
+    }
+
 }
