@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -27,6 +28,22 @@ public class AllowAccessActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_allow_access);
         allow_btn = findViewById(R.id.allow_access);
+
+        // Write code for showing this activity once when the application is running for the first time. For this we have to create share preferences.
+        SharedPreferences preferences = getSharedPreferences("AllowAccess", MODE_PRIVATE);
+        // We will get this string value here by using shared preferences
+        String value = preferences.getString("Allow", "");
+        // We will compare the value (above) to the string that is coming from shared preferences
+        if (value.equals("OK")) {
+            startActivity(new Intent(AllowAccessActivity.this, MainActivity.class));  // We will navigate by using Intent
+            finish();
+        } else {
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putString("Allow", "OK");
+            editor.apply();
+        }
+
+
         allow_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -40,7 +57,7 @@ public class AllowAccessActivity extends AppCompatActivity {
                 }
             }
         });
-    }
+    }  // Outside OnCreate method, we will override a method known as OnRequestPermissionResult
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -75,4 +92,12 @@ public class AllowAccessActivity extends AppCompatActivity {
         }
     }  // We cannot navigate to MainActivity because the app is paused so after coming back to this Activity on resume method is called. Let's work on Resume method
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {  // We will check if user grant the permission. If the user grant permission then we will navigate the user to Main activity
+            startActivity(new Intent(AllowAccessActivity.this, MainActivity.class));  // Code copied from above
+            finish();
+        }
+    }
 }
