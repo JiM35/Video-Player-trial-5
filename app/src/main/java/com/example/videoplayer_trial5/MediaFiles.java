@@ -1,6 +1,14 @@
 package com.example.videoplayer_trial5;
 
-public class MediaFiles {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import androidx.annotation.NonNull;
+
+// For sending ArrayList through intent we will use bundle. Before using bundle we will have to implement media files that is our model file.
+// We have to implement it to Parcelable
+
+public class MediaFiles implements Parcelable {
 
     private String id;
     private String title;
@@ -19,6 +27,28 @@ public class MediaFiles {
         this.path = path;
         this.dateAdded = dateAdded;
     }
+
+    protected MediaFiles(Parcel in) {
+        id = in.readString();
+        title = in.readString();
+        displayName = in.readString();
+        size = in.readString();
+        duration = in.readString();
+        path = in.readString();
+        dateAdded = in.readString();
+    }
+
+    public static final Creator<MediaFiles> CREATOR = new Creator<MediaFiles>() {
+        @Override
+        public MediaFiles createFromParcel(Parcel in) {
+            return new MediaFiles(in);
+        }
+
+        @Override
+        public MediaFiles[] newArray(int size) {
+            return new MediaFiles[size];
+        }
+    };
 
     public String getId() {
         return id;
@@ -74,5 +104,21 @@ public class MediaFiles {
 
     public void setDateAdded(String dateAdded) {
         this.dateAdded = dateAdded;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel parcel, int i) {
+        parcel.writeString(id);
+        parcel.writeString(title);
+        parcel.writeString(displayName);
+        parcel.writeString(size);
+        parcel.writeString(duration);
+        parcel.writeString(path);
+        parcel.writeString(dateAdded);
     }
 }

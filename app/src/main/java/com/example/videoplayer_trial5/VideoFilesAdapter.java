@@ -55,6 +55,14 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
             public void onClick(View v) {
 //                Part 6 - 18:09, Part 7
                 Intent intent = new Intent(context, VideoPlayerActivity.class);  // When user clicks on video item, it will navigate to next activity using Intent. The second activity will be video player activity - we will have to create it.
+                intent.putExtra("position", position);
+//                We will also get video name for showing the video in title bar
+                intent.putExtra("video_title", videoList.get(position).getDisplayName());  // Get video name from videoList. videoList.get(position).getDisplayName() will return video name.
+//                For sending ArrayList through intent we will use bundle. Before using bundle we will have to implement media files that is our model file.
+//                We have to implement it to Parcelable. In video files adapter, in Intent, we use bundle for sending video list to videoplayeractivity through intent.
+                Bundle bundle = new Bundle();
+                bundle.putParcelableArrayList("videoArrayList", videoList);
+                intent.putExtras(bundle);  // Select putExtras - with (s). We will get these values in VideoPlayerActivity.
                 context.startActivity(intent);
             }
         });
