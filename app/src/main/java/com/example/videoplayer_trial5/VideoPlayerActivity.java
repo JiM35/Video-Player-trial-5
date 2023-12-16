@@ -1,10 +1,13 @@
 package com.example.videoplayer_trial5;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,16 +40,17 @@ public class VideoPlayerActivity extends AppCompatActivity {
     String videoTitle;
     TextView title;
     ConcatenatingMediaSource concatenatingMediaSource;
-    
+
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setFullScreen();
         setContentView(R.layout.activity_video_player);
-//        Allocate memory to playerView
-        playerView = findViewById(R.id.exoplayer_view);  // This id exoplayer_view - has been passed in activity_video_player
 //        Now we have to get position and arraylist of video from VideoFilesAdapter using Intent
         getSupportActionBar().hide();
+//        Allocate memory to playerView
+        playerView = findViewById(R.id.exoplayer_view);  // This id exoplayer_view - has been passed in activity_video_player
         position = getIntent().getIntExtra("position", 1);  // Select getIntExtra because the data type of position is int. In quotes, pass the key that you are using for sending the position.
         videoTitle = getIntent().getStringExtra("video_title");  // Put the key that we are using in videofilesadapter for video title.
 //        For getting ArrayList from videofilesadapter we will use Parselable
@@ -82,10 +86,51 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private void playError() {
         player.addListener(new Player.Listener() {
             @Override
-            public void onPlayerError(PlaybackException error) {
+            public void onPlayerError(@NonNull PlaybackException error) {
                 Toast.makeText(VideoPlayerActivity.this, "Video Playing error", Toast.LENGTH_SHORT).show();
             }
         });
         player.setPlayWhenReady(true);
+    }
+
+//    When user clicks on back button, create if statement below super call for checking if player is playing, then it will stop the player
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        if (player.isPlaying()) {
+            player.stop();
+        }
+    }
+
+//    We will override onPause method - player.setPlayWhenReady() - because when the app pause, the video will also pause through the player.setPlayWhenReady() as false
+    @Override
+    protected void onPause() {
+        super.onPause();
+        player.setPlayWhenReady(false);
+        player.getPlaybackState();
+    }
+
+//    When our app is resumed again we will play the video
+    @Override
+    protected void onResume() {
+        super.onResume();
+        player.setPlayWhenReady(true);
+        player.getPlaybackState();
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        player.setPlayWhenReady(true);
+        player.getPlaybackState();
+    }
+
+//    If you change the orientation of video from portrait to landscape, the audio keeps playing again. So to prevent the app from audio keeps on playing again we will do some code in Manifest.
+//    android:configChanges="orientation|screenSize|layoutDirection" - By using this in AndroidManifest.xml, now our audio will not skip again by changing the orientation and changing screensize or layout direction
+
+    //    For hiding status bar, we have to create a method below the onRestart method. We have to call the setFullScreen method in onCreate method.
+    private void setFullScreen() {
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 }
