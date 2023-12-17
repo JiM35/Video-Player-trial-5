@@ -110,35 +110,51 @@ public class MainActivity extends AppCompatActivity {
 /* Video Player App in Android Studio (Part 5) | Swipe to Refresh folders, Rate and Share App - 10:21
 https://www.youtube.com/watch?v=Bnhl59v-66c&list=PLrEWK4N0Og0219lp6qxiOU5pSO8hhESUS&index=6 */
 
-//    @SuppressLint("NonConstantResourceId")
-//    @Override
-//    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-//        int id = item.getItemId();
-//        switch (id) {
-//            case R.id.rateus:
-//                Uri uri = Uri.parse("https://play.google.com/store/apps/details?id=" + getApplicationContext().getPackageName());
-//                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-//                startActivity(intent);
-//                break;
-//            case R.id.refresh_folders:
-//                finish();
-//                startActivity(getIntent());  // It will refresh activity
-//                break;
-//            case R.id.share_app:
-//                Intent share_intent = new Intent();
-//                share_intent.setAction(Intent.ACTION_SEND);
-//                share_intent.putExtra(Intent.EXTRA_TEXT, "Check this app via\n" + "https://play.google.com/store/apps/details?id=" + getApplicationContext().getPackageName());
-//                share_intent.setType("text/plain");
-//                startActivity(Intent.createChooser(share_intent, "Share app via"));
-//                break;
-//        }
-//        return true;
-//    }
-
+    /*
+    @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        Toast.makeText(this, "This action is not implemented yet", Toast.LENGTH_SHORT).show();
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.rateus:
+                Uri uri = Uri.parse("https://play.google.com/store/apps/details?id=" + getApplicationContext().getPackageName());
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                startActivity(intent);
+                break;
+            case R.id.refresh_folders:
+                finish();
+                startActivity(getIntent());  // It will refresh activity
+                break;
+            case R.id.share_app:
+                Intent share_intent = new Intent();
+                share_intent.setAction(Intent.ACTION_SEND);
+                share_intent.putExtra(Intent.EXTRA_TEXT, "Check this app via\n" + "https://play.google.com/store/apps/details?id=" + getApplicationContext().getPackageName());
+                share_intent.setType("text/plain");
+                startActivity(Intent.createChooser(share_intent, "Share app via"));
+                break;
+        }
         return true;
     }
+     */
 
+    @SuppressLint("NonConstantResourceId")
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.rateus) {
+            Uri uri = Uri.parse("https://play.google.com/store/apps/details?id=" + getApplicationContext().getPackageName());
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            startActivity(intent);
+        } else if (id == R.id.refresh_folders) {
+            finish();
+            startActivity(getIntent());  // It will refresh activity
+        } else if (id == R.id.share_app) {
+            Intent share_intent = new Intent();
+            share_intent.setAction(Intent.ACTION_SEND);
+            share_intent.putExtra(Intent.EXTRA_TEXT, "Check this app via\n" + "https://play.google.com/store/apps/details?id=" + getApplicationContext().getPackageName());
+            share_intent.setType("text/plain");
+            startActivity(Intent.createChooser(share_intent, "Share app via"));
+        }
+        return true;
+    }
 }

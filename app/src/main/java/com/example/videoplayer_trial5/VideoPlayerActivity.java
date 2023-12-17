@@ -6,8 +6,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,7 +31,7 @@ import java.util.Deque;
 
 // ExoPlayer is an alternative to Android's Media Player. By using Media Player it is very easy to play videos but if you want to create advanced player features using media player then it will require much effort for developers - that is why we will use ExoPlayer for creating those advanced features.
 
-public class VideoPlayerActivity extends AppCompatActivity {
+public class VideoPlayerActivity extends AppCompatActivity implements View.OnClickListener {
     //    Now we are getting the video list that we are sending through intent. First create arraylist
     ArrayList<MediaFiles> mVideoFiles = new ArrayList<>();
 
@@ -40,6 +42,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
     String videoTitle;
     TextView title;
     ConcatenatingMediaSource concatenatingMediaSource;
+    ImageView nextButton, previousButton;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -53,10 +56,16 @@ public class VideoPlayerActivity extends AppCompatActivity {
         playerView = findViewById(R.id.exoplayer_view);  // This id exoplayer_view - has been passed in activity_video_player
         position = getIntent().getIntExtra("position", 1);  // Select getIntExtra because the data type of position is int. In quotes, pass the key that you are using for sending the position.
         videoTitle = getIntent().getStringExtra("video_title");  // Put the key that we are using in videofilesadapter for video title.
-//        For getting ArrayList from videofilesadapter we will use Parselable
+//        For getting ArrayList from videofilesadapter we will use Parcelable
         mVideoFiles = getIntent().getExtras().getParcelableArrayList("videoArrayList");
+        nextButton = findViewById(R.id.exo_next);
+        previousButton = findViewById(R.id.exo_prev);
         title = findViewById(R.id.video_title);
         title.setText(videoTitle);
+
+        nextButton.setOnClickListener(this);
+        previousButton.setOnClickListener(this);
+
 //        Create method for playing the video through Uri
         playVideo();
     }
@@ -133,4 +142,61 @@ public class VideoPlayerActivity extends AppCompatActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
+
+    /*
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+//            Pass the id that we want to be clicked
+            case R.id.exo_next:
+                try {
+//                    First the player will stop and position will be incremented. playVideo() will call
+                    player.stop();
+                    position++;
+                    playVideo();
+                } catch (Exception e) {
+                    Toast.makeText(this, "No Next Video", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+//                When user clicks on previous button, we will use try catch statement. Position will be decremented because user wants to play previous video.
+            case R.id.exo_prev:
+                try {
+                    player.stop();
+                    position--;
+                    playVideo();
+                } catch (Exception e) {
+                    Toast.makeText(this, "No Previous Video", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+        }
+    }
+    To complete the onClick listener we have to pass the ids of exo_next and exo_prev above.
+    */
+
+    @Override
+    public void onClick(View view) {
+        int viewId = view.getId();
+        if (viewId == R.id.exo_next) {
+            try {
+                player.stop();
+                position++;
+                playVideo();
+            } catch (Exception e) {
+                Toast.makeText(this, "No Next Video", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        } else if (viewId == R.id.exo_prev) {
+            try {
+                player.stop();
+                position--;
+                playVideo();
+            } catch (Exception e) {
+                Toast.makeText(this, "No Previous Video", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+    }
 }
+
