@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.ViewHolder> {
     private final ArrayList<MediaFiles> videoList;
     private final Context context;
+    BottomSheetDialog bottomSheetDialog;
 
     public VideoFilesAdapter(ArrayList<MediaFiles> videoList, Context context) {
         this.videoList = videoList;
@@ -47,7 +49,19 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
         holder.menu_more.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(context, "menu more", Toast.LENGTH_SHORT).show();
+                bottomSheetDialog = new BottomSheetDialog(context, R.style.BottomSheetTheme);
+                View bsView = LayoutInflater.from(context).inflate(R.layout.video_bs_layout, v.findViewById(R.id.bottom_sheet));  // bottom_sheet is id of LinearLayout in video_bs_layout.xml
+//                setOnClickListener on first item with respect to ID of thet item
+                bsView.findViewById(R.id.bs_play).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        holder.itemView.performClick();
+//                        After perfoming click we have to dismiss the bottomSheetDialog.
+                        bottomSheetDialog.dismiss();
+                    }
+                });
+                bottomSheetDialog.setContentView(bsView);
+                bottomSheetDialog.show();
             }
         });
         holder.itemView.setOnClickListener(new View.OnClickListener() {
