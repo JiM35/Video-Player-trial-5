@@ -1,5 +1,6 @@
 package com.example.videoplayer_trial5;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -11,6 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+
+import javax.xml.namespace.QName;
 
 public class VideoFoldersAdapter extends RecyclerView.Adapter<VideoFoldersAdapter.ViewHolder> {
     private ArrayList<MediaFiles> mediaFiles;
@@ -32,6 +35,7 @@ public class VideoFoldersAdapter extends RecyclerView.Adapter<VideoFoldersAdapte
         return new ViewHolder(view);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
 //    Retrieve other folders of device storage containing video files
 //    onBindViewHolder method that is called by recycler view displays data on specified position
@@ -46,7 +50,7 @@ public class VideoFoldersAdapter extends RecyclerView.Adapter<VideoFoldersAdapte
         holder.folderName.setText(nameOfFolder);
         holder.folder_path.setText(folderPath.get(position));
 //        We are setting static text for now - 5 Videos
-        holder.noOfFiles.setText("5 Videos");
+        holder.noOfFiles.setText(noOfFiles(folderPath.get(position)) + " Videos");
 //        When user clicks on folder item it will navigate user to next activity using Intent
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -74,5 +78,17 @@ public class VideoFoldersAdapter extends RecyclerView.Adapter<VideoFoldersAdapte
             folder_path = itemView.findViewById(R.id.folderPath);
             noOfFiles = itemView.findViewById(R.id.noOfFiles);
         }
+    }
+
+    //    Create method of int type - noOfFiles. We will call the noOfFiles method for getting total number of video files in onBindViewHolder.
+    int noOfFiles(String folder_name) {
+
+        int files_no = 0;
+        for (MediaFiles mediaFiles : mediaFiles) {
+            if (mediaFiles.getPath().substring(0, mediaFiles.getPath().lastIndexOf("/")).endsWith(folder_name)) {
+                files_no++;
+            }
+        }
+        return files_no;
     }
 }

@@ -3,6 +3,7 @@ package com.example.videoplayer_trial5;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.annotation.SuppressLint;
 import android.database.Cursor;
@@ -20,6 +21,9 @@ public class VideoFilesActivity extends AppCompatActivity {
     private ArrayList<MediaFiles> videoFilesArrayList = new ArrayList<>();
     VideoFilesAdapter videoFilesAdapter;
     String folder_name;
+    //    Create object for SwipeRefreshLayout
+    SwipeRefreshLayout swipeRefreshLayout;
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,7 +31,18 @@ public class VideoFilesActivity extends AppCompatActivity {
         folder_name = getIntent().getStringExtra("folderName");  // The folder_name has to be above the getSupportActionBar(), if you are not doing this, you will get an error
         getSupportActionBar().setTitle(folder_name);  // We have to set this folder_name on toolbar title
         recyclerView = findViewById(R.id.videos_rv);
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_videos);
         showVideoFiles();
+
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+//                When user swipes down for refreshing the video files, we will call showVideoFiles method.
+                showVideoFiles();
+                swipeRefreshLayout.setRefreshing(false);  // Means we hide the refresh layout
+
+            }
+        });
     }
 
     @SuppressLint("NotifyDataSetChanged")
