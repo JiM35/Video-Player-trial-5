@@ -1,12 +1,20 @@
 package com.example.videoplayer_trial5;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,6 +26,7 @@ import com.bumptech.glide.Glide;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 
 // Adapter for showing video files - getting video files in a folder
@@ -60,6 +69,73 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
                         bottomSheetDialog.dismiss();
                     }
                 });
+
+                bsView.findViewById(R.id.bs_rename).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+                        alertDialog.setTitle("Rename to");
+                        EditText editText = new EditText(context);
+                        String path = videoList.get(position).getPath();
+                        final File file = new File(path);
+                        String videoName = file.getName();
+//                        Suppose you have a file with the name abc.mp4. We are getting video file name file.getName();, with the extension that will save to the variable videoName.
+//                        Below, we are removing the extension using substring. Substring is from 0 to dot (.). 0 means start to dot that will remove the mp4 extension - abc.mp4. The variable videoName contains the video file name with NO extension.
+                        videoName = videoName.substring(0, videoName.lastIndexOf("."));
+//                        Set the video name to edit text.
+                        editText.setText(videoName);
+                        alertDialog.setView(editText);
+                        editText.requestFocus();
+
+//                        Create two buttons for OK and CANCEL.
+                        alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @SuppressLint("NotifyDataSetChanged")
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+//                                When user clicks on OK after changing the name of file, we will create a string variable. This variable will contain only path without file name. This will return the path of video file.
+                                String onlyPath = file.getParentFile().getAbsolutePath();
+//                                Here we will get extension
+                                String ext = file.getAbsolutePath();
+                                ext = ext.substring(ext.lastIndexOf("."));
+//                                Suppose we have a video file name with path Media/Videos/abc.mp4. This (Media/Videos/abc.mp4) complete path will be saved in onlyPath variable. We are using second slash then abc, the filename changed by user and on last filename with extension.mp4.
+//                                This complete path of video file will be changed in newPath variable (below).
+                                String newPath = onlyPath + "/" + editText.getText().toString() + ext;
+                                File newFile = new File(newPath);
+                                boolean rename = file.renameTo(newFile);
+//                                We have to check if the video is renamed or not by using if statement.
+                                if (rename) {
+                                    ContentResolver resolver = context.getApplicationContext().getContentResolver();
+                                    resolver.delete(MediaStore.Files.getContentUri("external"), MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()});
+                                    Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                                    intent.setData(Uri.fromFile(newFile));
+                                    context.getApplicationContext().sendBroadcast(intent);
+
+                                    notifyDataSetChanged();
+                                    Toast.makeText(context, "Video Renamed!", Toast.LENGTH_SHORT).show();
+
+                                    SystemClock.sleep(200);
+                                    ((Activity) context).recreate();  // This will refresh the app automatically and there will be no need to close and open the app again.
+                                } else {
+//                                    In else statement, if video is not renamed we have to show a toast.
+                                    Toast.makeText(context, "Process Failed", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+
+//                        Create a negative button (CANCEL).
+                        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+//                                When user clicks on cancel, we will dismiss the dialog.
+                                dialogInterface.dismiss();
+                            }
+                        });
+
+                        alertDialog.create().show();
+                        bottomSheetDialog.dismiss();
+                    }
+                });
+
                 bottomSheetDialog.setContentView(bsView);
                 bottomSheetDialog.show();
             }
