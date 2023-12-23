@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -132,6 +133,60 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
                         });
 
                         alertDialog.create().show();
+                        bottomSheetDialog.dismiss();
+                    }
+                });
+
+                bsView.findViewById(R.id.bs_share).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+//                        When user clicks on share we have to share video using URI
+                        Uri uri = Uri.parse(videoList.get(position).getPath());
+                        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                        shareIntent.setType("video/*");
+                        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+                        context.startActivity(Intent.createChooser(shareIntent, "Share Video via"));
+                        bottomSheetDialog.dismiss();
+                    }
+                });
+
+                bsView.findViewById(R.id.bs_delete).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+//                        We will show AlertDialog with two buttons, DELETE and CANCEL, when user click on delete video
+                        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+                        alertDialog.setTitle("Delete");
+                        alertDialog.setMessage("Do you want to delete this video?");
+                        alertDialog.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                Uri contentUri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, Long.parseLong(videoList.get(position).getId()));
+                                File file = new File(videoList.get(position).getPath());  // Get the path of video that you want to delete
+                                boolean delete = file.delete();
+
+//                                Check if the file is deleted or not using if statement
+                                if (delete) {
+//                                    If the file is deleted we creaate context
+                                    context.getContentResolver().delete(contentUri, null, null);
+                                    videoList.remove(position);
+                                    notifyItemRemoved(position);
+                                    notifyItemRangeChanged(position, videoList.size());
+                                    Toast.makeText(context, "Video Deleted", Toast.LENGTH_SHORT).show();
+                                } else {
+//                                    In else statement if video is not deleted we have to show Toast
+                                    Toast.makeText(context, "Video cannot be Deleted", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+//                        Not we work on delete button that will be CANCEL
+                        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+//                                When user clicks on cancel, dialog will dismiss
+                                dialogInterface.dismiss();
+                            }
+                        });
+                        alertDialog.show();
                         bottomSheetDialog.dismiss();
                     }
                 });

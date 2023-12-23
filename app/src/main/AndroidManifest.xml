@@ -30,6 +30,7 @@
             android:exported="false" />
         <activity
             android:name=".VideoFilesActivity"
+            android:parentActivityName=".MainActivity"
             android:exported="false" />
         <activity
             android:name=".AllowAccessActivity"

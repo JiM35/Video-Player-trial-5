@@ -44,6 +44,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/folderPath"
                 android:text="Folder Path"
+                android:textColor="@color/light_dark"
                 android:maxLines="2"
                 android:ellipsize="end">
 
@@ -53,6 +54,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/noOfFiles"
+                android:textColor="@color/light_dark"
                 android:text="5 videos"
                 android:textSize="17sp">
 
