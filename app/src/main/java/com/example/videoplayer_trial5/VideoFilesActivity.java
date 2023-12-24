@@ -143,7 +143,7 @@ public class VideoFilesActivity extends AppCompatActivity implements SearchView.
 //                        dialogInterface.dismiss();
 //                    }
 //                });
-////                We will create a String variable of Array tyoe
+////                We will create a String variable of Array type
 //                String[] items = {"Name (A to Z)", "Size (Big to Small)", "Date (New to Old", "Length (Long to Short)"};
 //                alertDialog.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {  // -1 because we do not want any item selected as default. If we write 0 means we want first item selected as default
 //                    @Override
@@ -198,7 +198,7 @@ public class VideoFilesActivity extends AppCompatActivity implements SearchView.
                     dialogInterface.dismiss();
                 }
             });
-//                We will create a String variable of Array tyoe
+//                We will create a String variable of Array type
             String[] items = {"Name (A to Z)", "Size (Big to Small)", "Date (New to Old)", "Length (Long to Short)"};
             alertDialog.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {  // -1 because we do not want any item selected as default. If we write 0 means we want first item selected as default
                 @Override
