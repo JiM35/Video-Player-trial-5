@@ -1,0 +1,6 @@
+![Screenshot_2023-12-23-19-13-25-570_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/8283c5a4-9836-4076-8cdc-7ef96946c4d1)
+![Screenshot_2023-12-23-19-13-51-092_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/d0bfd41e-e2c8-42ae-9389-a1f96fbbca03)
+![Screenshot_2023-12-23-19-14-05-054_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/c4bb0ca1-b149-4fd1-b775-e9b0b143c592)
+![Screenshot_2023-12-23-19-15-40-803_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/0272ecba-5db1-41a2-b880-29a4a3fd1626)
+![Screenshot_2023-12-23-19-16-23-379_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/4aa89676-ac5d-4d70-be11-fe8ae49a5940)
+![Screenshot_2023-12-23-19-16-26-064_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/bf4065d5-4a0f-45e9-99ef-5b844496aae6)
