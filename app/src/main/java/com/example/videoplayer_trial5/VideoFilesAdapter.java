@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,12 +29,11 @@ import com.bumptech.glide.Glide;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.io.File;
-import java.net.URI;
 import java.util.ArrayList;
 
 // Adapter for showing video files - getting video files in a folder
 public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.ViewHolder> {
-    private final ArrayList<MediaFiles> videoList;
+    private ArrayList<MediaFiles> videoList;
     private final Context context;
     BottomSheetDialog bottomSheetDialog;
 
@@ -94,6 +94,12 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
                             @SuppressLint("NotifyDataSetChanged")
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
+//                                We have to add validation in rename video file edit text – when user will click on OK after renaming the file, we will check if the edit text is empty or not.
+                                if (TextUtils.isEmpty(editText.getText().toString())) {
+                                    Toast.makeText(context, "Can't rename Empty file", Toast.LENGTH_SHORT).show();
+//                                    After showing the toast we will return it
+                                    return;
+                                }
 //                                When user clicks on OK after changing the name of file, we will create a string variable. This variable will contain only path without file name. This will return the path of video file.
                                 String onlyPath = file.getParentFile().getAbsolutePath();
 //                                Here we will get extension
@@ -302,6 +308,13 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
             videoTime = String.format("%02d:%02d", mns, scs);  // If video had duration less than 1 hour then we will use this format - minutes, seconds
         }
         return videoTime;
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    void updateVideoFiles(ArrayList<MediaFiles> files) {
+        videoList = new ArrayList<>();
+        videoList.addAll(files);
+        notifyDataSetChanged();
     }
 }
 

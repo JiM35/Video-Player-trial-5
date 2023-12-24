@@ -10,16 +10,19 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.SearchView;
 
 import java.util.ArrayList;
 
 
-public class VideoFilesActivity extends AppCompatActivity {
+public class VideoFilesActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
     //    In VideoFilesAdapter we get the thumbnail and video duration now we will initialize the adapter in VideoFilesActivity.
     RecyclerView recyclerView;
     private ArrayList<MediaFiles> videoFilesArrayList = new ArrayList<>();
-    VideoFilesAdapter videoFilesAdapter;
+    static VideoFilesAdapter videoFilesAdapter;  // Make it static so we can call
     String folder_name;
     //    Create object for SwipeRefreshLayout
     SwipeRefreshLayout swipeRefreshLayout;
@@ -74,5 +77,35 @@ public class VideoFilesActivity extends AppCompatActivity {
             } while (cursor.moveToNext());
         }
         return videoFiles;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.video_menu, menu);
+        MenuItem menuItem = menu.findItem(R.id.search_video);
+        SearchView searchView = (SearchView) menuItem.getActionView();
+        searchView.setOnQueryTextListener(this);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String s) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+//        When user will write any text, we will first create string variable
+        String inputs = newText.toLowerCase();
+        ArrayList<MediaFiles> mediaFiles = new ArrayList<>();
+        for (MediaFiles media : videoFilesArrayList) {
+            if (media.getTitle().toLowerCase().contains(inputs)) {
+//                If the search item contains the name of any video file, we will show the results
+                mediaFiles.add(media);
+            }
+        }
+//        Below for loop we have to update VideoFilesAdapter.
+        VideoFilesActivity.videoFilesAdapter.updateVideoFiles(mediaFiles);
+        return true;
     }
 }
