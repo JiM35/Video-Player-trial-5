@@ -115,8 +115,6 @@ public class VideoFilesActivity extends AppCompatActivity implements SearchView.
         return super.onCreateOptionsMenu(menu);
     }
 
-
-
 //    @Override
 //    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 //        SharedPreferences preferences = getSharedPreferences(MY_PREF, MODE_PRIVATE);

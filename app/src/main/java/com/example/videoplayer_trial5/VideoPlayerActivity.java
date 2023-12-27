@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +42,15 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     int position;
     String videoTitle;
     TextView title;
+    private ControlsMode controlsMode;
+
+    public enum ControlsMode {
+        LOCK, FULLSCREEN;
+    }
+
+    ImageView videoBack, lock, unlock, scaling;
+//    Create object for RelativeLayout, take the variable as root
+    RelativeLayout root;
     ConcatenatingMediaSource concatenatingMediaSource;
     ImageView nextButton, previousButton;
 
@@ -61,10 +71,21 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         nextButton = findViewById(R.id.exo_next);
         previousButton = findViewById(R.id.exo_prev);
         title = findViewById(R.id.video_title);
+//        Declare the RelativeLayout with id root_layout in custom_playback_view.xml.
+//        Allocate memory by using id.
+        videoBack = findViewById(R.id.video_back);
+        lock = findViewById(R.id.lock);
+        unlock = findViewById(R.id.unlock);
+        root = findViewById(R.id.root_layout);
+
         title.setText(videoTitle);
 
         nextButton.setOnClickListener(this);
         previousButton.setOnClickListener(this);
+        videoBack.setOnClickListener(this);
+        lock.setOnClickListener(this);
+        unlock.setOnClickListener(this);
+        scaling.setOnClickListener();
 
 //        Create method for playing the video through Uri
         playVideo();
@@ -177,6 +198,31 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.video_back:
+//                When user clicks on back button, we will check if video is playing, we will release the player
+                if (player != null) {
+                    player.release();
+                }
+                finish();
+                break;
+
+            case R.id.lock:
+//                When user will click on lock icon, we will unlock the video and show all controls by using ControlsMode.
+                controlsMode = ControlsMode.FULLSCREEN;
+                root.setVisibility(View.VISIBLE);
+                lock.setVisibility(View.INVISIBLE);  // The icon will be invisible (Part 17 9:07 🤣🤣🤣🤣🤣)
+                Toast.makeText(this, "Unlocked", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.unlock:
+//                When user will first click on unlock button, we will lock the video and hide all the controls.
+                controlsMode = ControlsMode.LOCK;  // It will lock the video
+                root.setVisibility(View.INVISIBLE);
+                lock.setVisibility(View.VISIBLE);
+                Toast.makeText(this, "Locked", Toast.LENGTH_SHORT).show();
+                break;
+
+        }
         int viewId = view.getId();
         if (viewId == R.id.exo_next) {
             try {

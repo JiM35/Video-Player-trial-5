@@ -161,4 +161,17 @@
 
         </LinearLayout>
     </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/lock"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/ripple_circle"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_lock"
+        android:visibility="gone" />
+
 </RelativeLayout>
