@@ -22,6 +22,7 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.ProgressiveMediaSource;
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
@@ -76,6 +77,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         videoBack = findViewById(R.id.video_back);
         lock = findViewById(R.id.lock);
         unlock = findViewById(R.id.unlock);
+//        Allocate memory to scaling
+        scaling = findViewById(R.id.scaling);
         root = findViewById(R.id.root_layout);
 
         title.setText(videoTitle);
@@ -85,7 +88,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         videoBack.setOnClickListener(this);
         lock.setOnClickListener(this);
         unlock.setOnClickListener(this);
-        scaling.setOnClickListener();
+        scaling.setOnClickListener(firstListener);  // Pass the View name
 
 //        Create method for playing the video through Uri
         playVideo();
@@ -156,7 +159,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     }
 
 //    If you change the orientation of video from portrait to landscape, the audio keeps playing again. So to prevent the app from audio keeps on playing again we will do some code in Manifest.
-//    android:configChanges="orientation|screenSize|layoutDirection" - By using this in AndroidManifest.xml, now our audio will not skip again by changing the orientation and changing screensize or layout direction
+//    android:configChanges="orientation|screenSize|layoutDirection" - By using this in AndroidManifest.xml, now our audio will not skip again by changing the orientation and changing screen size or layout direction
 
     //    For hiding status bar, we have to create a method below the onRestart method. We have to call the setFullScreen method in onCreate method.
     private void setFullScreen() {
@@ -196,35 +199,30 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     To complete the onClick listener we have to pass the ids of exo_next and exo_prev above.
     */
 
+    /*
     @Override
     public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.video_back:
-//                When user clicks on back button, we will check if video is playing, we will release the player
-                if (player != null) {
-                    player.release();
-                }
-                finish();
-                break;
-
-            case R.id.lock:
-//                When user will click on lock icon, we will unlock the video and show all controls by using ControlsMode.
-                controlsMode = ControlsMode.FULLSCREEN;
-                root.setVisibility(View.VISIBLE);
-                lock.setVisibility(View.INVISIBLE);  // The icon will be invisible (Part 17 9:07 🤣🤣🤣🤣🤣)
-                Toast.makeText(this, "Unlocked", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.unlock:
-//                When user will first click on unlock button, we will lock the video and hide all the controls.
-                controlsMode = ControlsMode.LOCK;  // It will lock the video
-                root.setVisibility(View.INVISIBLE);
-                lock.setVisibility(View.VISIBLE);
-                Toast.makeText(this, "Locked", Toast.LENGTH_SHORT).show();
-                break;
-
-        }
         int viewId = view.getId();
-        if (viewId == R.id.exo_next) {
+
+        if (viewId == R.id.video_back) {
+            // When user clicks on back button, we will check if video is playing, we will release the player
+            if (player != null) {
+                player.release();
+            }
+            finish();
+        } else if (viewId == R.id.lock) {
+            // When user will click on lock icon, we will unlock the video and show all controls by using ControlsMode.
+            controlsMode = ControlsMode.FULLSCREEN;
+            root.setVisibility(View.VISIBLE);
+            lock.setVisibility(View.INVISIBLE);  // The icon will be invisible (Part 17 9:07 🤣🤣🤣🤣🤣)
+            Toast.makeText(this, "Unlocked", Toast.LENGTH_SHORT).show();
+        } else if (viewId == R.id.unlock) {
+            // When user will first click on unlock button, we will lock the video and hide all the controls.
+            controlsMode = ControlsMode.LOCK;  // It will lock the video
+            root.setVisibility(View.INVISIBLE);
+            lock.setVisibility(View.VISIBLE);
+            Toast.makeText(this, "Locked", Toast.LENGTH_SHORT).show();
+        } else if (viewId == R.id.exo_next) {
             try {
                 player.stop();
                 position++;
@@ -244,5 +242,89 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
             }
         }
     }
+    */
+
+    @Override
+    public void onClick(View view) {
+        int viewId = view.getId();
+
+        if (viewId == R.id.video_back) {
+            // When user clicks on back button, we will check if video is playing, we will release the player
+            if (player != null) {
+                player.release();
+            }
+            finish();
+        } else if (viewId == R.id.lock) {
+            // When user will click on lock icon, we will unlock the video and show all controls by using ControlsMode.
+            controlsMode = ControlsMode.FULLSCREEN;
+            root.setVisibility(View.VISIBLE);
+            lock.setVisibility(View.INVISIBLE);  // The icon will be invisible (Part 17 9:07 🤣🤣🤣🤣🤣)
+            Toast.makeText(this, "Unlocked", Toast.LENGTH_SHORT).show();
+        } else if (viewId == R.id.unlock) {
+            // When user will first click on unlock button, we will lock the video and hide all the controls.
+            controlsMode = ControlsMode.LOCK;  // It will lock the video
+            root.setVisibility(View.INVISIBLE);
+            lock.setVisibility(View.VISIBLE);
+            Toast.makeText(this, "Locked", Toast.LENGTH_SHORT).show();
+        } else if (viewId == R.id.exo_next) {
+            try {
+                player.stop();
+                position++;
+                playVideo();
+            } catch (Exception e) {
+                Toast.makeText(this, "No Next Video", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        } else if (viewId == R.id.exo_prev) {
+            try {
+                player.stop();
+                position--;
+                playVideo();
+            } catch (Exception e) {
+                Toast.makeText(this, "No Previous Video", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+    }
+
+    View.OnClickListener firstListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+//            When user clicks on scaling option we will change the video to full screen mode using playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL)
+            playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
+            player.setVideoScalingMode(C.VIDEO_SCALING_MODE_DEFAULT);
+            scaling.setImageResource(R.drawable.fullscreen);
+
+            Toast.makeText(VideoPlayerActivity.this, "Full Screen", Toast.LENGTH_SHORT).show();
+            scaling.setOnClickListener(secondListener);
+        }
+    };
+
+    View.OnClickListener secondListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
+            player.setVideoScalingMode(C.VIDEO_SCALING_MODE_DEFAULT);
+            scaling.setImageResource(R.drawable.zoom);
+
+            Toast.makeText(VideoPlayerActivity.this, "Zoom", Toast.LENGTH_SHORT).show();
+            scaling.setOnClickListener(thirdListener);
+        }
+    };
+
+    View.OnClickListener thirdListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+//            When user will click on this thirdListener, we will change the video mode to fit by using playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT)
+            playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
+            player.setVideoScalingMode(C.VIDEO_SCALING_MODE_DEFAULT);
+//            Change the icon
+            scaling.setImageResource(R.drawable.fit);
+
+            Toast.makeText(VideoPlayerActivity.this, "Fit", Toast.LENGTH_SHORT).show();
+//            When user will again click on it we will call the firstListener
+            scaling.setOnClickListener(firstListener);
+        }
+    };
 }
 
