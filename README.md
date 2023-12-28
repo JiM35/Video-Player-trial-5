@@ -1,5 +1,5 @@
 Icons
-![Screenshot_2023-12-28-11-46-06-548_com example videoplayer_trial5](https://github.com/JiM35/AudioPlayer/assets/48186310/a2636788-6b39-4295-96ca-3ef02338816c)
+![Screenshot_2023-12-28-11-26-25-904_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/be6e1e39-2709-4b02-9786-e245be28f670)
 Mute
 ![image](https://github.com/JiM35/AudioPlayer/assets/48186310/00bcf254-32a4-400c-8d05-8b4ea6b3ffff)
 Screen rotate
