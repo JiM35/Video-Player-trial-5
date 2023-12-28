@@ -52,6 +52,13 @@
                 android:src="@drawable/ic_more_wight" />
         </LinearLayout>
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/recyclerview_icons"
+            android:layout_below="@+id/toolbar"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
         <RelativeLayout
             android:id="@+id/progress"
             android:layout_width="match_parent"

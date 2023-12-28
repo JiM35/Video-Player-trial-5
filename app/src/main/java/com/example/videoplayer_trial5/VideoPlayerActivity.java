@@ -2,6 +2,8 @@ package com.example.videoplayer_trial5;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 import android.net.Uri;
@@ -43,6 +45,15 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     int position;
     String videoTitle;
     TextView title;
+    //    Initialize the Recycler
+//    Horizontal RecyclerView variables
+    private ArrayList<IconModel> iconModelArrayList = new ArrayList<>();
+    PlaybackIconsAdapter playbackIconsAdapter;
+    //    Create object for recyclerview
+    RecyclerView recyclerViewIcons;
+
+
+
     private ControlsMode controlsMode;
 
     public enum ControlsMode {
@@ -50,7 +61,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     }
 
     ImageView videoBack, lock, unlock, scaling;
-//    Create object for RelativeLayout, take the variable as root
+    //    Create object for RelativeLayout, take the variable as root
     RelativeLayout root;
     ConcatenatingMediaSource concatenatingMediaSource;
     ImageView nextButton, previousButton;
@@ -80,6 +91,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //        Allocate memory to scaling
         scaling = findViewById(R.id.scaling);
         root = findViewById(R.id.root_layout);
+//        Allocate memory to recyclerview
+        recyclerViewIcons = findViewById(R.id.recyclerview_icons);
 
         title.setText(videoTitle);
 
@@ -89,6 +102,19 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         lock.setOnClickListener(this);
         unlock.setOnClickListener(this);
         scaling.setOnClickListener(firstListener);  // Pass the View name
+
+//        Initialize the recyclerview - first we will add the items in list
+        iconModelArrayList.add(new IconModel(R.drawable.ic_right, ""));
+        iconModelArrayList.add(new IconModel(R.drawable.ic_night_mode, "Night"));
+        iconModelArrayList.add(new IconModel(R.drawable.ic_volume_off, "Mute"));
+        iconModelArrayList.add(new IconModel(R.drawable.ic_rotate, "Rotate"));
+
+        playbackIconsAdapter = new PlaybackIconsAdapter(iconModelArrayList, this);
+
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, RecyclerView.HORIZONTAL, true);
+        recyclerViewIcons.setLayoutManager(layoutManager);
+        recyclerViewIcons.setAdapter(playbackIconsAdapter);
+        playbackIconsAdapter.notifyDataSetChanged();
 
 //        Create method for playing the video through Uri
         playVideo();
@@ -126,7 +152,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         player.setPlayWhenReady(true);
     }
 
-//    When user clicks on back button, create if statement below super call for checking if player is playing, then it will stop the player
+    //    When user clicks on back button, create if statement below super call for checking if player is playing, then it will stop the player
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -135,7 +161,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-//    We will override onPause method - player.setPlayWhenReady() - because when the app pause, the video will also pause through the player.setPlayWhenReady() as false
+    //    We will override onPause method - player.setPlayWhenReady() - because when the app pause, the video will also pause through the player.setPlayWhenReady() as false
     @Override
     protected void onPause() {
         super.onPause();
@@ -143,7 +169,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         player.getPlaybackState();
     }
 
-//    When our app is resumed again we will play the video
+    //    When our app is resumed again we will play the video
     @Override
     protected void onResume() {
         super.onResume();
