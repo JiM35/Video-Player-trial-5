@@ -16,6 +16,16 @@ public class PlaybackIconsAdapter extends RecyclerView.Adapter<PlaybackIconsAdap
 
     private ArrayList<IconModel> iconModelsList;
     private Context context;
+    private OnItemClickListener mListener;
+
+    public interface OnItemClickListener {
+        void onItemClick(int position);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+
+        mListener = listener;
+    }
 
     public PlaybackIconsAdapter(ArrayList<IconModel> iconModelsList, Context context) {
         this.iconModelsList = iconModelsList;
@@ -27,7 +37,7 @@ public class PlaybackIconsAdapter extends RecyclerView.Adapter<PlaybackIconsAdap
     public PlaybackIconsAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 //        Create object for view
         View view = LayoutInflater.from(context).inflate(R.layout.icons_layout, parent, false);
-        return new ViewHolder(view);
+        return new ViewHolder(view, mListener);
     }
 
     @Override
@@ -49,11 +59,23 @@ public class PlaybackIconsAdapter extends RecyclerView.Adapter<PlaybackIconsAdap
         TextView iconName;
         ImageView icon;
 
-        public ViewHolder(@NonNull View itemView) {
+        public ViewHolder(@NonNull View itemView, OnItemClickListener listener) {
 
             super(itemView);
             icon = itemView.findViewById(R.id.playback_icon);
             iconName = itemView.findViewById(R.id.icon_title);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (listener != null) {
+                        int position = getAdapterPosition();
+                        if (position != RecyclerView.NO_POSITION) {
+                            listener.onItemClick(position);
+                        }
+                    }
+                }
+            });
         }
     }
 }

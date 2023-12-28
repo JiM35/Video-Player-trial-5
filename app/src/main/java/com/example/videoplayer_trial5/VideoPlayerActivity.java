@@ -114,7 +114,28 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, RecyclerView.HORIZONTAL, true);
         recyclerViewIcons.setLayoutManager(layoutManager);
         recyclerViewIcons.setAdapter(playbackIconsAdapter);
+
         playbackIconsAdapter.notifyDataSetChanged();
+        playbackIconsAdapter.setOnItemClickListener(new PlaybackIconsAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+//                Set click listeners on item according to position
+                if (position == 0) {
+//                    Check whether our click listener is working or not by using Toast message
+                    Toast.makeText(VideoPlayerActivity.this, "First", Toast.LENGTH_SHORT).show();
+                }
+                if (position == 1) {
+                    Toast.makeText(VideoPlayerActivity.this, "Second", Toast.LENGTH_SHORT).show();
+                }
+                if (position == 2) {
+                    Toast.makeText(VideoPlayerActivity.this, "Third", Toast.LENGTH_SHORT).show();
+                }
+                if (position == 3) {
+//                    if position equal to 3 means our item is on position 4
+                    Toast.makeText(VideoPlayerActivity.this, "Fourth", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
 //        Create method for playing the video through Uri
         playVideo();
