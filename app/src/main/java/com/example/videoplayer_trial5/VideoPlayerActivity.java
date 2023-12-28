@@ -36,23 +36,32 @@ import java.util.Deque;
 // ExoPlayer is an alternative to Android's Media Player. By using Media Player it is very easy to play videos but if you want to create advanced player features using media player then it will require much effort for developers - that is why we will use ExoPlayer for creating those advanced features.
 
 public class VideoPlayerActivity extends AppCompatActivity implements View.OnClickListener {
-    //    Now we are getting the video list that we are sending through intent. First create arraylist
+//    Now we are getting the video list that we are sending through intent. First create arraylist
     ArrayList<MediaFiles> mVideoFiles = new ArrayList<>();
 
-    //    Create object for PlayerView and SimpleExoPlayer with variables as playerView and player
+//    Create object for PlayerView and SimpleExoPlayer with variables as playerView and player
     PlayerView playerView;
     SimpleExoPlayer player;
     int position;
     String videoTitle;
     TextView title;
-    //    Initialize the Recycler
+
+//    Initialize the Recycler
 //    Horizontal RecyclerView variables
     private ArrayList<IconModel> iconModelArrayList = new ArrayList<>();
     PlaybackIconsAdapter playbackIconsAdapter;
-    //    Create object for recyclerview
+
+//    Create object for recyclerview
     RecyclerView recyclerViewIcons;
+    boolean expand = false;
+//    Create object of View
+    View nightMode;
 
+//    Create boolean value for night_mode
+    boolean dark = false;
 
+//    Create boolean value for Mute
+    boolean mute = false;
 
     private ControlsMode controlsMode;
 
@@ -66,7 +75,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     ConcatenatingMediaSource concatenatingMediaSource;
     ImageView nextButton, previousButton;
 
-    @SuppressLint("MissingInflatedId")
+    @SuppressLint({"MissingInflatedId", "NotifyDataSetChanged"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,6 +100,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //        Allocate memory to scaling
         scaling = findViewById(R.id.scaling);
         root = findViewById(R.id.root_layout);
+//        Give id to night mode
+        nightMode = findViewById(R.id.night_mode);
 //        Allocate memory to recyclerview
         recyclerViewIcons = findViewById(R.id.recyclerview_icons);
 
@@ -117,18 +128,75 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 
         playbackIconsAdapter.notifyDataSetChanged();
         playbackIconsAdapter.setOnItemClickListener(new PlaybackIconsAdapter.OnItemClickListener() {
+            @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onItemClick(int position) {
 //                Set click listeners on item according to position
                 if (position == 0) {
-//                    Check whether our click listener is working or not by using Toast message
-                    Toast.makeText(VideoPlayerActivity.this, "First", Toast.LENGTH_SHORT).show();
+//                    First create boolean variable - boolean expand = false;
+                    if (expand) {
+//                        Again when user clicks on left icon we will remove all the icons and show only four icons for this.
+//                        Clear the iconModelArrayList
+                        iconModelArrayList.clear();
+                        iconModelArrayList.add(new IconModel(R.drawable.ic_right, ""));
+                        iconModelArrayList.add(new IconModel(R.drawable.ic_night_mode, "Night"));
+                        iconModelArrayList.add(new IconModel(R.drawable.ic_volume_off, "Mute"));
+                        iconModelArrayList.add(new IconModel(R.drawable.ic_rotate, "Rotate"));
+                        playbackIconsAdapter.notifyDataSetChanged();
+                        expand = false;
+                    } else {
+//                        When user first clicks on right icon, this else code will execute
+//                        We have to expand the list and add the icons in recyclerview.
+                        if (iconModelArrayList.size() == 4) {
+                            iconModelArrayList.add(new IconModel(R.drawable.ic_volume, "Volume"));
+                            iconModelArrayList.add(new IconModel(R.drawable.ic_brightness, "Brightness"));
+                            iconModelArrayList.add(new IconModel(R.drawable.ic_equalizer, "Equalizer"));
+                            iconModelArrayList.add(new IconModel(R.drawable.ic_speed, "Speed"));
+                            iconModelArrayList.add(new IconModel(R.drawable.ic_subtitles, "Subtitles"));
+                        }
+//                        Set the icon to first position - ic_left. The title will be empty
+                        iconModelArrayList.set(position, new IconModel(R.drawable.ic_left, ""));
+                        playbackIconsAdapter.notifyDataSetChanged();
+
+                        expand = true;
+                    }
                 }
+
+//                Night mode
                 if (position == 1) {
-                    Toast.makeText(VideoPlayerActivity.this, "Second", Toast.LENGTH_SHORT).show();
+//                    We will first create view of night mode in xml file of VideoPlayerActivity - activity_video_player.
+                    if (dark) {
+//                        When user again clicks on night icon, we will setVisibility to gone.
+                        nightMode.setVisibility(View.GONE);
+                        iconModelArrayList.set(position, new IconModel(R.drawable.ic_night_mode, "Night"));  // Change the title to the previous one - Night
+                        playbackIconsAdapter.notifyDataSetChanged();
+                        dark = false;
+                    } else {
+//                        When user first clicks on dark mode, this else code will execute
+                        nightMode.setVisibility(View.VISIBLE);
+
+                        iconModelArrayList.set(position, new IconModel(R.drawable.ic_night_mode, "Day"));  // Change the title to Day
+                        playbackIconsAdapter.notifyDataSetChanged();
+                        dark = true;
+                    }
                 }
+
+//                Third icon for Mute and Unmute
                 if (position == 2) {
-                    Toast.makeText(VideoPlayerActivity.this, "Third", Toast.LENGTH_SHORT).show();
+//                    Create a boolean value of Mute - boolean mute = false;
+                    if (mute) {
+//                        User again clicked on Mute icon
+                        player.setVolume(1);
+                        iconModelArrayList.set(position, new IconModel(R.drawable.ic_volume_off, "Mute"));  // The text will be Mute
+                        playbackIconsAdapter.notifyDataSetChanged();
+                        mute = false;
+                    } else {
+//                        When user first clicks on mute we will set the volume to zero using player.setVolume(0).
+                        player.setVolume(0);
+                        iconModelArrayList.set(position, new IconModel(R.drawable.ic_volume, "Unmute"));
+                        playbackIconsAdapter.notifyDataSetChanged();
+                        mute = true;
+                    }
                 }
                 if (position == 3) {
 //                    if position equal to 3 means our item is on position 4

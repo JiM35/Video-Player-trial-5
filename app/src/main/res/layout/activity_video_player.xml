@@ -20,6 +20,14 @@
         app:surface_type="surface_view"
         app:use_controller="true" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/night_mode"
+        android:background="@color/light_dark"
+        android:visibility="gone"/>
+
+
     <!--Deleted-->
     <!--        app:fastforward_increment="10000"-->
     <!--        app:rewind_increment="10000"-->
