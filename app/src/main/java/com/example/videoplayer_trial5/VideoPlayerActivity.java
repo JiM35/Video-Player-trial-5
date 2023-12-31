@@ -6,6 +6,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -198,9 +200,39 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                         mute = true;
                     }
                 }
+
+//                Orientation
                 if (position == 3) {
-//                    if position equal to 3 means our item is on position 4
-                    Toast.makeText(VideoPlayerActivity.this, "Fourth", Toast.LENGTH_SHORT).show();
+//                    If position equal to 3 means our item is on position 4
+//                    Check orientation (landscape or portrait) of screen using (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+                    if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+//                        If the screen orientation is portrait we will change it to landscape using (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                        playbackIconsAdapter.notifyDataSetChanged();
+                    } else if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//                        If screen orientation is landscape, change it to portrait
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+//                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                        playbackIconsAdapter.notifyDataSetChanged();
+                    }
+
+                }
+
+//                Volume
+                if (position == 4) {
+//                    We will control volume using seekbar
+//                    First create dialog in java class
+//                    Instantiate the VolumeDialog class
+//                    Create object for VolumeDialog
+                    VolumeDialog volumeDialog = new VolumeDialog();
+                    volumeDialog.show(getSupportFragmentManager(), "dialog");
+                    playbackIconsAdapter.notifyDataSetChanged();
+
+                }
+
+//                Brightness
+                if (position == 5) {
+
                 }
             }
         });
