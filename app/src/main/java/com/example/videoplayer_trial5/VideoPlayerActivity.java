@@ -6,8 +6,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.media.audiofx.AudioEffect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -230,9 +232,24 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 
                 }
 
-//                Brightness
+//                Brightness - we will initialize the BrightnessDialog in VideoPlayerActivity.
                 if (position == 5) {
 
+                    BrightnessDialog brightnessDialog = new BrightnessDialog();
+                    brightnessDialog.show(getSupportFragmentManager(), "dialog");
+                    playbackIconsAdapter.notifyDataSetChanged();
+                }
+
+//                Equalizer - we will get default Equalizer of device. We will navigate the user to default equalizer if the device has using Intent.
+//                In else statement if device does not hve any equalizer we will show a Toast
+                if (position == 6) {
+                    Intent intent = new Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL);
+                    if ((intent.resolveActivity(getPackageManager()) != null)) {
+                        startActivityForResult(intent, 123);
+                    } else {
+                        Toast.makeText(VideoPlayerActivity.this, "No Equalizer Found", Toast.LENGTH_SHORT).show();
+                    }
+                    playbackIconsAdapter.notifyDataSetChanged();
                 }
             }
         });
