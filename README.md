@@ -1,0 +1,6 @@
+![Screenshot_2024-01-08-21-00-25-004_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/22cad266-1544-490b-a736-beffc224f7e7)
+![Screenshot_2024-01-08-21-00-18-077_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/4f96c31f-7d31-4e52-b17d-992cfc622814)
+![Screenshot_2024-01-08-21-00-05-184_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/d4241673-385a-4475-8152-a16cc87f2015)
+![Screenshot_2024-01-08-20-59-56-190_com android settings](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/ac8cb040-b742-485a-80a4-28f22e9aa2ed)
+![Screenshot_2024-01-08-20-59-49-713_com android settings](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/026465bc-0700-45d0-b6fe-509609bbc89d)
+![Screenshot_2024-01-08-20-59-43-343_com android settings](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/c479c8e0-602e-4dbc-807a-d2a360645b50)
