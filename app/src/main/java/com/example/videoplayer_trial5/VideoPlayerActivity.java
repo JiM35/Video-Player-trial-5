@@ -1,17 +1,22 @@
 package com.example.videoplayer_trial5;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.media.MediaMetadataRetriever;
 import android.media.audiofx.AudioEffect;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -23,6 +28,7 @@ import android.widget.Toast;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.PlaybackException;
+import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
@@ -67,6 +73,12 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //    Create boolean value for Mute
     boolean mute = false;
 
+//    We will create an object for playback parameters
+    PlaybackParameters parameters;
+
+    //    Float variable for speed
+    float speed;
+
     private ControlsMode controlsMode;
 
     public enum ControlsMode {
@@ -74,7 +86,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     }
 
     ImageView videoBack, lock, unlock, scaling;
-    //    Create object for RelativeLayout, take the variable as root
+//    Create object for RelativeLayout, take the variable as root
     RelativeLayout root;
     ConcatenatingMediaSource concatenatingMediaSource;
     ImageView nextButton, previousButton;
@@ -93,6 +105,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         videoTitle = getIntent().getStringExtra("video_title");  // Put the key that we are using in videofilesadapter for video title.
 //        For getting ArrayList from videofilesadapter we will use Parcelable
         mVideoFiles = getIntent().getExtras().getParcelableArrayList("videoArrayList");
+        screenOrientation();
         nextButton = findViewById(R.id.exo_next);
         previousButton = findViewById(R.id.exo_prev);
         title = findViewById(R.id.video_title);
@@ -241,7 +254,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                 }
 
 //                Equalizer - we will get default Equalizer of device. We will navigate the user to default equalizer if the device has using Intent.
-//                In else statement if device does not hve any equalizer we will show a Toast
+//                In else statement if device does not have any equalizer we will show a Toast
                 if (position == 6) {
                     Intent intent = new Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL);
                     if ((intent.resolveActivity(getPackageManager()) != null)) {
@@ -250,6 +263,70 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                         Toast.makeText(VideoPlayerActivity.this, "No Equalizer Found", Toast.LENGTH_SHORT).show();
                     }
                     playbackIconsAdapter.notifyDataSetChanged();
+                }
+
+//                Playback speed
+//                Means user clicked on speed, we will show a dialog for choosing playback speed
+//                Pass VideoPlayerActivity.this as context
+                if (position == 7) {
+                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(VideoPlayerActivity.this);
+                    alertDialog.setTitle("Select Playback Speed").setPositiveButton("OK", null);
+//                    Create Array type String
+//                    0.5x is slow speed than normal
+                    String[] items = {"0.5x", "1x Normal Speed", "1.25x", "1.5x", "2x"};
+//                    -1 because we do not want any of the item to be selected as default
+//                    If you want "1x Normal Speed" to be selected as default then we have to pass 1, but as we do not want any of the option to be selected as default that is why we write -1
+                    int checkedItem = -1;
+                    alertDialog.setSingleChoiceItems(items, checkedItem, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int which) {
+                            switch (which) {
+                                case 0:
+//                                    If user selects "0,5x", we will write code here
+//                                    First we have to take the float variable for speed - float speed;
+                                    speed = 0.5f;
+                                    parameters = new PlaybackParameters(speed);
+                                    player.setPlaybackParameters(parameters);
+                                    break;
+
+                                case 1:
+//                                    If user selects "1x Normal Speed", we will write code here
+//                                    If user selects "1x Normal Speed", we will keep the speed to normal
+                                    speed = 1f;
+                                    parameters = new PlaybackParameters(speed);
+                                    player.setPlaybackParameters(parameters);
+                                    break;
+
+                                case 2:
+//                                    If user selects "1.25x", we will write code here
+//                                    If user selects "1.25x", we will change speed to 1.25
+                                    speed = 1.25f;
+                                    parameters = new PlaybackParameters(speed);
+                                    player.setPlaybackParameters(parameters);
+                                    break;
+
+//                                    If user selects 1.25x and 2x we will change it accordingly
+                                case 3:
+                                    speed = 1.5f;
+                                    parameters = new PlaybackParameters(speed);
+                                    player.setPlaybackParameters(parameters);
+                                    break;
+
+//                                    5th position
+                                case 4:
+                                    speed = 2f;
+                                    parameters = new PlaybackParameters(speed);
+                                    player.setPlaybackParameters(parameters);
+                                    break;
+
+                                default:
+                                    break;
+
+                            }
+                        }
+                    });
+                    AlertDialog alert = alertDialog.create();
+                    alert.show();
                 }
             }
         });
@@ -274,10 +351,46 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         }
         playerView.setPlayer(player);
         playerView.setKeepScreenOn(true);  // The setKeepScreenOn will prevent the screen from dimming after the screen timeout reaches.
+        player.setPlaybackParameters(parameters);
         player.prepare(concatenatingMediaSource);
         player.seekTo(position, C.TIME_UNSET);
 //        Pass method for showing the error effects of player got while playing video
         playError();
+    }
+
+//    Check screen orientation and play the video accordingly
+//    We pass the screenOrientation method in onCreate
+    private void screenOrientation() {
+        try {
+//            In try we have to check the width and height of video using bitmap
+//            First create object for MediaMetadataRetriever
+            MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+//            Create object for Bitmap
+            Bitmap bitmap;
+//            String for getting path
+            String path = mVideoFiles.get(position).getPath();
+//            Create Uri object
+            Uri uri = Uri.parse(path);
+            retriever.setDataSource(this, uri);
+            bitmap = retriever.getFrameAtTime();
+
+//            Here we will get video width and height in int variables
+            int videoWidth = bitmap.getWidth();
+            int videoHeight = bitmap.getHeight();
+
+//            Now we will check video height and width and change the orientation accordingly
+//            If videoWidth is grater than videoHeight we will change the orientation to landscape
+            if (videoWidth > videoHeight) {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+            } else {
+//                In else we are changing the orientation as portrait
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            }
+        } catch (Exception e) {
+//            If it catches any exception we are going to use Log.e()
+            Log.e("MediaMetadataRetriever", "screenOrientation: ");
+
+        }
     }
 
     private void playError() {
@@ -290,7 +403,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         player.setPlayWhenReady(true);
     }
 
-    //    When user clicks on back button, create if statement below super call for checking if player is playing, then it will stop the player
+//    When user clicks on back button, create if statement below super call for checking if player is playing, then it will stop the player
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -299,7 +412,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-    //    We will override onPause method - player.setPlayWhenReady() - because when the app pause, the video will also pause through the player.setPlayWhenReady() as false
+//    We will override onPause method - player.setPlayWhenReady() - because when the app pause, the video will also pause through the player.setPlayWhenReady() as false
     @Override
     protected void onPause() {
         super.onPause();
@@ -307,7 +420,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         player.getPlaybackState();
     }
 
-    //    When our app is resumed again we will play the video
+//    When our app is resumed again we will play the video
     @Override
     protected void onResume() {
         super.onResume();
@@ -325,7 +438,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //    If you change the orientation of video from portrait to landscape, the audio keeps playing again. So to prevent the app from audio keeps on playing again we will do some code in Manifest.
 //    android:configChanges="orientation|screenSize|layoutDirection" - By using this in AndroidManifest.xml, now our audio will not skip again by changing the orientation and changing screen size or layout direction
 
-    //    For hiding status bar, we have to create a method below the onRestart method. We have to call the setFullScreen method in onCreate method.
+//    For hiding status bar, we have to create a method below the onRestart method. We have to call the setFullScreen method in onCreate method.
     private void setFullScreen() {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
