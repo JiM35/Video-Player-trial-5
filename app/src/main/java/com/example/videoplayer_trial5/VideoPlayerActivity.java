@@ -1,5 +1,7 @@
 package com.example.videoplayer_trial5;
 
+import static com.google.android.exoplayer2.Format.*;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,7 +27,12 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.developer.filepicker.controller.DialogSelectionListener;
+import com.developer.filepicker.model.DialogConfigs;
+import com.developer.filepicker.model.DialogProperties;
+import com.developer.filepicker.view.FilePickerDialog;
 import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.PlaybackParameters;
@@ -33,14 +40,18 @@ import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.MergingMediaSource;
 import com.google.android.exoplayer2.source.ProgressiveMediaSource;
+import com.google.android.exoplayer2.source.SingleSampleMediaSource;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 
 // ExoPlayer is an alternative to Android's Media Player. By using Media Player it is very easy to play videos but if you want to create advanced player features using media player then it will require much effort for developers - that is why we will use ExoPlayer for creating those advanced features.
@@ -76,8 +87,16 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //    We will create an object for playback parameters
     PlaybackParameters parameters;
 
-    //    Float variable for speed
+//    Float variable for speed
     float speed;
+
+//    When user clicks subtitles icon, we are going to use file picker library for showing directories
+//    We will create object for DialogProperties
+    DialogProperties dialogProperties;
+    FilePickerDialog filePickerDialog;
+
+    //    Create object for Uri
+    Uri uriSubtitles;
 
     private ControlsMode controlsMode;
 
@@ -102,8 +121,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //        Allocate memory to playerView
         playerView = findViewById(R.id.exoplayer_view);  // This id exoplayer_view - has been passed in activity_video_player
         position = getIntent().getIntExtra("position", 1);  // Select getIntExtra because the data type of position is int. In quotes, pass the key that you are using for sending the position.
-        videoTitle = getIntent().getStringExtra("video_title");  // Put the key that we are using in videofilesadapter for video title.
-//        For getting ArrayList from videofilesadapter we will use Parcelable
+        videoTitle = getIntent().getStringExtra("video_title");  // Put the key that we are using in VideoFilesAdapter for video title.
+//        For getting ArrayList from VideoFilesAdapter we will use Parcelable
         mVideoFiles = getIntent().getExtras().getParcelableArrayList("videoArrayList");
         screenOrientation();
         nextButton = findViewById(R.id.exo_next);
@@ -116,6 +135,15 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         unlock = findViewById(R.id.unlock);
 //        Allocate memory to scaling
         scaling = findViewById(R.id.scaling);
+
+//        Initialize the file picker objects for showing directories when user clicks on subtitles
+        dialogProperties = new DialogProperties();
+        filePickerDialog = new FilePickerDialog(VideoPlayerActivity.this);
+        filePickerDialog.setTitle("Select a Subtitle File");
+//        Set positive and negative buttons
+        filePickerDialog.setPositiveBtnName("OK");
+        filePickerDialog.setNegativeBtnName("Cancel");
+
         root = findViewById(R.id.root_layout);
 //        Give id to night mode
         nightMode = findViewById(R.id.night_mode);
@@ -328,6 +356,32 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                     AlertDialog alert = alertDialog.create();
                     alert.show();
                 }
+
+//                Subtitles
+                if (position == 8) {
+//                    If user clicked on subtitle icon
+//                    First we are going to use file picker library for showing the directories
+//                    If we write DialogConfigs.MULTI_MODE it will mean user can select more than one file but we do not want user to select more than one file that is why we will use DialogConfigs.SINGLE_MODE
+                    dialogProperties.selection_mode = DialogConfigs.SINGLE_MODE;
+//                    Now we will select the extension. Subtitle file will be in .srt extension
+                    dialogProperties.extensions = new String[]{".srt"};
+//                    Here we write the default path
+                    dialogProperties.root = new File("/storage/emulated/0");
+                    filePickerDialog.setProperties(dialogProperties);
+                    filePickerDialog.show();
+//                    After user will select a subtitle file we will write code here
+                    filePickerDialog.setDialogSelectionListener(new DialogSelectionListener() {
+                        @Override
+                        public void onSelectedFilePaths(String[] files) {
+                            for (String path : files) {
+//                                Object of file
+                                File file = new File(path);
+                                uriSubtitles = Uri.parse(file.getAbsolutePath().toString());
+                            }
+                            playVideoSubtitles(uriSubtitles);
+                        }
+                    });
+                }
             }
         });
 
@@ -358,7 +412,39 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         playError();
     }
 
-//    Check screen orientation and play the video accordingly
+//    Copy the playVideo method above and paste below the same method. Rename it playVideoSubtitles and make some changes
+//    This method will be for playing videos with subtitles
+    private void playVideoSubtitles(Uri subtitle) {
+        long oldPosition = player.getCurrentPosition();
+//        Stop the player
+        player.stop();
+
+        String path = mVideoFiles.get(position).getPath();
+        Uri uri = Uri.parse(path);
+        player = new SimpleExoPlayer.Builder(this).setSeekBackIncrementMs(10000).setSeekForwardIncrementMs(10000).build();
+//        Now create object for default data source factory
+        DefaultDataSourceFactory dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, "app"));
+//        We will use concatenating media source
+        concatenatingMediaSource = new ConcatenatingMediaSource();
+//        Create a for loop for playing the video in loop
+        for (int i = 0; i < mVideoFiles.size(); i++) {
+            new File(String.valueOf(mVideoFiles.get(i)));
+            MediaSource mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(Uri.parse(String.valueOf(uri))));
+            Format textFormat = Format.createTextSampleFormat(null, MimeTypes.APPLICATION_SUBRIP, Format.NO_VALUE, "app");
+            MediaSource subtitleSource = new SingleSampleMediaSource.Factory(dataSourceFactory).setTreatLoadErrorsAsEndOfStream(true).createMediaSource(Uri.parse(String.valueOf(subtitle)), textFormat, C.TIME_UNSET);
+            MergingMediaSource mergingMediaSource = new MergingMediaSource(mediaSource, subtitleSource);
+            concatenatingMediaSource.addMediaSource(mergingMediaSource);
+        }
+        playerView.setPlayer(player);
+        playerView.setKeepScreenOn(true);  // The setKeepScreenOn will prevent the screen from dimming after the screen timeout reaches.
+        player.setPlaybackParameters(parameters);
+        player.prepare(concatenatingMediaSource);
+        player.seekTo(position, oldPosition);
+//        Pass method for showing the error effects of player got while playing video
+        playError();
+    }
+
+    //    Check screen orientation and play the video accordingly
 //    We pass the screenOrientation method in onCreate
     private void screenOrientation() {
         try {
