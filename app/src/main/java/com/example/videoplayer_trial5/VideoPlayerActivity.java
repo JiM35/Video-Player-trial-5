@@ -52,7 +52,6 @@ import com.google.android.exoplayer2.util.Util;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Deque;
 
 // ExoPlayer is an alternative to Android's Media Player. By using Media Player it is very easy to play videos but if you want to create advanced player features using media player then it will require much effort for developers - that is why we will use ExoPlayer for creating those advanced features.
 
@@ -101,16 +100,21 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     private ControlsMode controlsMode;
 
     public enum ControlsMode {
-        LOCK, FULLSCREEN;
+        LOCK, FULLSCREEN
     }
 
-    ImageView videoBack, lock, unlock, scaling;
+//    Create object for ImageView
+//    Create variable for video playlist - name it as videoList
+    ImageView videoBack, lock, unlock, scaling, videoList;
+
+    //    Create object for VideoFilesAdapter
+    VideoFilesAdapter videoFilesAdapter;
 //    Create object for RelativeLayout, take the variable as root
     RelativeLayout root;
     ConcatenatingMediaSource concatenatingMediaSource;
     ImageView nextButton, previousButton;
 
-    @SuppressLint({"MissingInflatedId", "NotifyDataSetChanged"})
+    @SuppressLint({"NotifyDataSetChanged", "MissingInflatedId"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -147,6 +151,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         root = findViewById(R.id.root_layout);
 //        Give id to night mode
         nightMode = findViewById(R.id.night_mode);
+//        Give the id to videoList - for showing list of videos in a folder (playlist)
+        videoList = findViewById(R.id.video_list);
 //        Allocate memory to recyclerview
         recyclerViewIcons = findViewById(R.id.recyclerview_icons);
 
@@ -157,6 +163,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         videoBack.setOnClickListener(this);
         lock.setOnClickListener(this);
         unlock.setOnClickListener(this);
+//        Set setOnClickListener on videoList (for showing playlist)
+        videoList.setOnClickListener(this);
         scaling.setOnClickListener(firstListener);  // Pass the View name
 
 //        Initialize the recyclerview - first we will add the items in list
@@ -429,11 +437,11 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //        Create a for loop for playing the video in loop
         for (int i = 0; i < mVideoFiles.size(); i++) {
             new File(String.valueOf(mVideoFiles.get(i)));
-            MediaSource mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(Uri.parse(String.valueOf(uri))));
-            Format textFormat = Format.createTextSampleFormat(null, MimeTypes.APPLICATION_SUBRIP, Format.NO_VALUE, "app");
-            MediaSource subtitleSource = new SingleSampleMediaSource.Factory(dataSourceFactory).setTreatLoadErrorsAsEndOfStream(true).createMediaSource(Uri.parse(String.valueOf(subtitle)), textFormat, C.TIME_UNSET);
-            MergingMediaSource mergingMediaSource = new MergingMediaSource(mediaSource, subtitleSource);
-            concatenatingMediaSource.addMediaSource(mergingMediaSource);
+//            MediaSource mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(Uri.parse(String.valueOf(uri))));
+//            Format textFormat = Format.createTextSampleFormat(null, MimeTypes.APPLICATION_SUBRIP, Format.NO_VALUE, "app");
+//            MediaSource subtitleSource = new SingleSampleMediaSource.Factory(dataSourceFactory).setTreatLoadErrorsAsEndOfStream(true).createMediaSource(Uri.parse(String.valueOf(subtitle)), textFormat, C.TIME_UNSET);
+//            MergingMediaSource mergingMediaSource = new MergingMediaSource(mediaSource, subtitleSource);
+//            concatenatingMediaSource.addMediaSource(mergingMediaSource);
         }
         playerView.setPlayer(player);
         playerView.setKeepScreenOn(true);  // The setKeepScreenOn will prevent the screen from dimming after the screen timeout reaches.
@@ -617,18 +625,28 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                 player.release();
             }
             finish();
+
+        } else if (viewId == R.id.video_list) {
+//            Initialize the video list class, create video list class and name it as PlayListDialog
+//            Instantiate the PlayListDialog in VideoPlayerActivity
+            PlayListDialog playListDialog = new PlayListDialog(mVideoFiles, videoFilesAdapter);
+            playListDialog.show(getSupportFragmentManager(), playListDialog.getTag());
+            finish();
+
         } else if (viewId == R.id.lock) {
             // When user will click on lock icon, we will unlock the video and show all controls by using ControlsMode.
             controlsMode = ControlsMode.FULLSCREEN;
             root.setVisibility(View.VISIBLE);
             lock.setVisibility(View.INVISIBLE);  // The icon will be invisible (Part 17 9:07 🤣🤣🤣🤣🤣)
             Toast.makeText(this, "Unlocked", Toast.LENGTH_SHORT).show();
+
         } else if (viewId == R.id.unlock) {
             // When user will first click on unlock button, we will lock the video and hide all the controls.
             controlsMode = ControlsMode.LOCK;  // It will lock the video
             root.setVisibility(View.INVISIBLE);
             lock.setVisibility(View.VISIBLE);
             Toast.makeText(this, "Locked", Toast.LENGTH_SHORT).show();
+
         } else if (viewId == R.id.exo_next) {
             try {
                 player.stop();
@@ -638,6 +656,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                 Toast.makeText(this, "No Next Video", Toast.LENGTH_SHORT).show();
                 finish();
             }
+
         } else if (viewId == R.id.exo_prev) {
             try {
                 player.stop();

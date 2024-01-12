@@ -8,6 +8,7 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
@@ -36,10 +37,13 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
     private ArrayList<MediaFiles> videoList;
     private final Context context;
     BottomSheetDialog bottomSheetDialog;
+    private final int viewType;
 
-    public VideoFilesAdapter(ArrayList<MediaFiles> videoList, Context context) {
+    public VideoFilesAdapter(ArrayList<MediaFiles> videoList, Context context, int viewType) {
         this.videoList = videoList;
         this.context = context;
+//        this means this class
+        this.viewType = viewType;
     }
 
     @NonNull
@@ -57,206 +61,216 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
         double milliSeconds = Double.parseDouble(videoList.get(position).getDuration());  // This variable contains the duration of video in milliseconds. We have to change the milliseconds into hours, minutes and seconds according to the duration of video. For this we have to create a method - timeConversion
         holder.videoDuration.setText(timeConversion((long) milliSeconds));  // We will get the duration in milliseconds. Long value we will pass milliseconds
         Glide.with(context).load(new File(videoList.get(position).getPath())).into(holder.thumbnail);  // For getting the thumbnail, we will use glide - that is image loading format
-        holder.menu_more.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                bottomSheetDialog = new BottomSheetDialog(context, R.style.BottomSheetTheme);
-                View bsView = LayoutInflater.from(context).inflate(R.layout.video_bs_layout, v.findViewById(R.id.bottom_sheet));  // bottom_sheet is id of LinearLayout in video_bs_layout.xml
-//                setOnClickListener on first item with respect to ID of that item
-                bsView.findViewById(R.id.bs_play).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        holder.itemView.performClick();
-//                        After perfoming click we have to dismiss the bottomSheetDialog.
-                        bottomSheetDialog.dismiss();
-                    }
-                });
 
-                bsView.findViewById(R.id.bs_rename).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
-                        alertDialog.setTitle("Rename to");
-                        EditText editText = new EditText(context);
-                        String path = videoList.get(position).getPath();
-                        final File file = new File(path);
-                        String videoName = file.getName();
+        if (viewType == 0) {
+            holder.menu_more.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    bottomSheetDialog = new BottomSheetDialog(context, R.style.BottomSheetTheme);
+                    View bsView = LayoutInflater.from(context).inflate(R.layout.video_bs_layout, v.findViewById(R.id.bottom_sheet));  // bottom_sheet is id of LinearLayout in video_bs_layout.xml
+//                setOnClickListener on first item with respect to ID of that item
+                    bsView.findViewById(R.id.bs_play).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            holder.itemView.performClick();
+//                        After perfoming click we have to dismiss the bottomSheetDialog.
+                            bottomSheetDialog.dismiss();
+                        }
+                    });
+
+                    bsView.findViewById(R.id.bs_rename).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+                            alertDialog.setTitle("Rename to");
+                            EditText editText = new EditText(context);
+                            String path = videoList.get(position).getPath();
+                            final File file = new File(path);
+                            String videoName = file.getName();
 //                        Suppose you have a file with the name abc.mp4. We are getting video file name file.getName();, with the extension that will save to the variable videoName.
 //                        Below, we are removing the extension using substring. Substring is from 0 to dot (.). 0 means start to dot that will remove the mp4 extension - abc.mp4. The variable videoName contains the video file name with NO extension.
-                        videoName = videoName.substring(0, videoName.lastIndexOf("."));
+                            videoName = videoName.substring(0, videoName.lastIndexOf("."));
 //                        Set the video name to edit text.
-                        editText.setText(videoName);
-                        alertDialog.setView(editText);
-                        editText.requestFocus();
+                            editText.setText(videoName);
+                            alertDialog.setView(editText);
+                            editText.requestFocus();
 
 //                        Create two buttons for OK and CANCEL.
-                        alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @SuppressLint("NotifyDataSetChanged")
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
+                            alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @SuppressLint("NotifyDataSetChanged")
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
 //                                We have to add validation in rename video file edit text – when user will click on OK after renaming the file, we will check if the edit text is empty or not.
-                                if (TextUtils.isEmpty(editText.getText().toString())) {
-                                    Toast.makeText(context, "Can't rename Empty file", Toast.LENGTH_SHORT).show();
+                                    if (TextUtils.isEmpty(editText.getText().toString())) {
+                                        Toast.makeText(context, "Can't rename Empty file", Toast.LENGTH_SHORT).show();
 //                                    After showing the toast we will return it
-                                    return;
-                                }
+                                        return;
+                                    }
 //                                When user clicks on OK after changing the name of file, we will create a string variable. This variable will contain only path without file name. This will return the path of video file.
-                                String onlyPath = file.getParentFile().getAbsolutePath();
+                                    String onlyPath = file.getParentFile().getAbsolutePath();
 //                                Here we will get extension
-                                String ext = file.getAbsolutePath();
-                                ext = ext.substring(ext.lastIndexOf("."));
+                                    String ext = file.getAbsolutePath();
+                                    ext = ext.substring(ext.lastIndexOf("."));
 //                                Suppose we have a video file name with path Media/Videos/abc.mp4. This (Media/Videos/abc.mp4) complete path will be saved in onlyPath variable. We are using second slash then abc, the filename changed by user and on last filename with extension.mp4.
 //                                This complete path of video file will be changed in newPath variable (below).
-                                String newPath = onlyPath + "/" + editText.getText().toString() + ext;
-                                File newFile = new File(newPath);
-                                boolean rename = file.renameTo(newFile);
+                                    String newPath = onlyPath + "/" + editText.getText().toString() + ext;
+                                    File newFile = new File(newPath);
+                                    boolean rename = file.renameTo(newFile);
 //                                We have to check if the video is renamed or not by using if statement.
-                                if (rename) {
-                                    ContentResolver resolver = context.getApplicationContext().getContentResolver();
-                                    resolver.delete(MediaStore.Files.getContentUri("external"), MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()});
-                                    Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                                    intent.setData(Uri.fromFile(newFile));
-                                    context.getApplicationContext().sendBroadcast(intent);
+                                    if (rename) {
+                                        ContentResolver resolver = context.getApplicationContext().getContentResolver();
+                                        resolver.delete(MediaStore.Files.getContentUri("external"), MediaStore.MediaColumns.DATA + "=?", new String[]{file.getAbsolutePath()});
+                                        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                                        intent.setData(Uri.fromFile(newFile));
+                                        context.getApplicationContext().sendBroadcast(intent);
 
-                                    notifyDataSetChanged();
-                                    Toast.makeText(context, "Video Renamed!", Toast.LENGTH_SHORT).show();
+                                        notifyDataSetChanged();
+                                        Toast.makeText(context, "Video Renamed!", Toast.LENGTH_SHORT).show();
 
-                                    SystemClock.sleep(200);
-                                    ((Activity) context).recreate();  // This will refresh the app automatically and there will be no need to close and open the app again.
-                                } else {
+                                        SystemClock.sleep(200);
+                                        ((Activity) context).recreate();  // This will refresh the app automatically and there will be no need to close and open the app again.
+                                    } else {
 //                                    In else statement, if video is not renamed we have to show a toast.
-                                    Toast.makeText(context, "Process Failed", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(context, "Process Failed", Toast.LENGTH_SHORT).show();
+                                    }
                                 }
-                            }
-                        });
+                            });
 
 //                        Create a negative button (CANCEL).
-                        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
+                            alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
 //                                When user clicks on cancel, we will dismiss the dialog.
-                                dialogInterface.dismiss();
-                            }
-                        });
+                                    dialogInterface.dismiss();
+                                }
+                            });
 
-                        alertDialog.create().show();
-                        bottomSheetDialog.dismiss();
-                    }
-                });
+                            alertDialog.create().show();
+                            bottomSheetDialog.dismiss();
+                        }
+                    });
 
-                bsView.findViewById(R.id.bs_share).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
+                    bsView.findViewById(R.id.bs_share).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
 //                        When user clicks on share we have to share video using URI
-                        Uri uri = Uri.parse(videoList.get(position).getPath());
-                        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                        shareIntent.setType("video/*");
-                        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
-                        context.startActivity(Intent.createChooser(shareIntent, "Share Video via"));
-                        bottomSheetDialog.dismiss();
-                    }
-                });
+                            Uri uri = Uri.parse(videoList.get(position).getPath());
+                            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                            shareIntent.setType("video/*");
+                            shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+                            context.startActivity(Intent.createChooser(shareIntent, "Share Video via"));
+                            bottomSheetDialog.dismiss();
+                        }
+                    });
 
-                bsView.findViewById(R.id.bs_delete).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
+                    bsView.findViewById(R.id.bs_delete).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
 //                        We will show AlertDialog with two buttons, DELETE and CANCEL, when user click on delete video
-                        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
-                        alertDialog.setTitle("Delete");
-                        alertDialog.setMessage("Do you want to delete this video?");
-                        alertDialog.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                Uri contentUri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, Long.parseLong(videoList.get(position).getId()));
-                                File file = new File(videoList.get(position).getPath());  // Get the path of video that you want to delete
-                                boolean delete = file.delete();
+                            AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+                            alertDialog.setTitle("Delete");
+                            alertDialog.setMessage("Do you want to delete this video?");
+                            alertDialog.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    Uri contentUri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, Long.parseLong(videoList.get(position).getId()));
+                                    File file = new File(videoList.get(position).getPath());  // Get the path of video that you want to delete
+                                    boolean delete = file.delete();
 
 //                                Check if the file is deleted or not using if statement
-                                if (delete) {
+                                    if (delete) {
 //                                    If the file is deleted we creaate context
-                                    context.getContentResolver().delete(contentUri, null, null);
-                                    videoList.remove(position);
-                                    notifyItemRemoved(position);
-                                    notifyItemRangeChanged(position, videoList.size());
-                                    Toast.makeText(context, "Video Deleted", Toast.LENGTH_SHORT).show();
-                                } else {
+                                        context.getContentResolver().delete(contentUri, null, null);
+                                        videoList.remove(position);
+                                        notifyItemRemoved(position);
+                                        notifyItemRangeChanged(position, videoList.size());
+                                        Toast.makeText(context, "Video Deleted", Toast.LENGTH_SHORT).show();
+                                    } else {
 //                                    In else statement if video is not deleted we have to show Toast
-                                    Toast.makeText(context, "Video cannot be Deleted", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(context, "Video cannot be Deleted", Toast.LENGTH_SHORT).show();
+                                    }
                                 }
-                            }
-                        });
+                            });
 //                        Not we work on delete button that will be CANCEL
-                        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
+                            alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
 //                                When user clicks on cancel, dialog will dismiss
-                                dialogInterface.dismiss();
-                            }
-                        });
-                        alertDialog.show();
-                        bottomSheetDialog.dismiss();
-                    }
-                });
+                                    dialogInterface.dismiss();
+                                }
+                            });
+                            alertDialog.show();
+                            bottomSheetDialog.dismiss();
+                        }
+                    });
 
-                bsView.findViewById(R.id.bs_properties).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
+                    bsView.findViewById(R.id.bs_properties).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
 //                        When user will click on properties of video, we will show AlertDialog for showing all the properties
-                        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
-                        alertDialog.setTitle("Properties");
+                            AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+                            alertDialog.setTitle("Properties");
 
 
 //                        We will get all the properties of video files
 //                        Create String variable for getting first property
-                        String one = "File: " + videoList.get(position).getDisplayName(); // Static text will be file because first property is file name
+                            String one = "File: " + videoList.get(position).getDisplayName(); // Static text will be file because first property is file name
 
 //                        Second, we will show the path of that file
-                        String path = videoList.get(position).getPath();  // Here we are getting the complete path of video file with video name and extension
-                        int indexOfPath = path.lastIndexOf("/");  // Here using lastIndexOf and substring we are cutting the video file and extension and the variable two will contain only the path of video file without video name.
+                            String path = videoList.get(position).getPath();  // Here we are getting the complete path of video file with video name and extension
+                            int indexOfPath = path.lastIndexOf("/");  // Here using lastIndexOf and substring we are cutting the video file and extension and the variable two will contain only the path of video file without video name.
 //                        Second property of video files - path
-                        String two = "Path: " + path.substring(0, indexOfPath);
+                            String two = "Path: " + path.substring(0, indexOfPath);
 
 //                        The third variable will be size of video file.
 //                        We will get the size of video file using Formatter. Press Ctrl and click on size. We are getting the size variable (above) that contains the size of video file.
-                        /** String three = "Size: " + android.text.format.Formatter.formatFileSize(context, size); */
+                            /** String three = "Size: " + android.text.format.Formatter.formatFileSize(context, size); */
 //                        We can also write:
-                        String three = "Size: " + android.text.format.Formatter.formatFileSize(context, Long.parseLong(videoList.get(position).getSize()));
+                            String three = "Size: " + android.text.format.Formatter.formatFileSize(context, Long.parseLong(videoList.get(position).getSize()));
 
 //                        We will get the forth property of video file. The forth property will be length of video file
-                        String four = "Length: " + timeConversion((long) milliSeconds);  // We will get length of video file from using the timeConversion method
+                            String four = "Length: " + timeConversion((long) milliSeconds);  // We will get length of video file from using the timeConversion method
 
 //                        The fifth property is format of video file
-                        String nameWithFormat = videoList.get(position).getDisplayName();  // The getDisplayName contains the video file name with extension. We will separate the extension and show in fifth variable
-                        int index = nameWithFormat.lastIndexOf(".");
-                        String format = nameWithFormat.substring(index + 1);  // The index + 1 will get extension of video file that will be stored in format variable and we set the format variable to fifth property.
-                        String five = "Format: " + format;
+                            String nameWithFormat = videoList.get(position).getDisplayName();  // The getDisplayName contains the video file name with extension. We will separate the extension and show in fifth variable
+                            int index = nameWithFormat.lastIndexOf(".");
+                            String format = nameWithFormat.substring(index + 1);  // The index + 1 will get extension of video file that will be stored in format variable and we set the format variable to fifth property.
+                            String five = "Format: " + format;
 
 //                        Get the sixth property of video file
-                        MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-                        mediaMetadataRetriever.setDataSource(videoList.get(position).getPath());
-                        String height = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);  // First we get height of video
-                        String width = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);  // Create second variable for getting the width of video
-                        String six = "Resolution: " + width + "x" + height;  // Set the width and height here. "x" will represent multiply
+                            MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+                            mediaMetadataRetriever.setDataSource(videoList.get(position).getPath());
+                            String height = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);  // First we get height of video
+                            String width = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);  // Create second variable for getting the width of video
+                            String six = "Resolution: " + width + "x" + height;  // Set the width and height here. "x" will represent multiply
 
 
 //                        We will pass all the variables one, two, three, four, five and six. These are the six properties of video file, we will set all these properties in setMessage
-                        alertDialog.setMessage(one + "\n\n" + two + "\n\n" + three +"\n\n" + four + "\n\n" + five + "\n\n" + six);  // In setMessage, we have to show all the properties of video files one by one
-                        alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
+                            alertDialog.setMessage(one + "\n\n" + two + "\n\n" + three + "\n\n" + four + "\n\n" + five + "\n\n" + six);  // In setMessage, we have to show all the properties of video files one by one
+                            alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
 //                                When user clicks on OK button after checking all the properties of that video file we will dismiss the AlertDialog
-                                dialogInterface.dismiss();
-                            }
-                        });
-                        alertDialog.show();
-                        bottomSheetDialog.dismiss();
-                    }
-                });
+                                    dialogInterface.dismiss();
+                                }
+                            });
+                            alertDialog.show();
+                            bottomSheetDialog.dismiss();
+                        }
+                    });
 
-                bottomSheetDialog.setContentView(bsView);
-                bottomSheetDialog.show();
-            }
-        });
+                    bottomSheetDialog.setContentView(bsView);
+                    bottomSheetDialog.show();
+                }
+            });
+        } else {
+//            In else statement, if view type has any other int value except 0, then we will set the visibility to GONE, because in playlist we do not want the menu_more icon
+            holder.menu_more.setVisibility(View.GONE);
+//            Change the color of video name and video size to white
+            holder.videoName.setTextColor(Color.WHITE);
+            holder.videoSize.setTextColor(Color.WHITE);
+        }
+
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -271,6 +285,9 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
                 bundle.putParcelableArrayList("videoArrayList", videoList);
                 intent.putExtras(bundle);  // Select putExtras - with (s). We will get these values in VideoPlayerActivity.
                 context.startActivity(intent);
+                if (viewType == 1) {
+                    ((Activity) context).finish();
+                }
             }
         });
     }

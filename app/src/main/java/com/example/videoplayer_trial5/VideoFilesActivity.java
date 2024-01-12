@@ -23,15 +23,16 @@ import java.util.ArrayList;
 
 public class VideoFilesActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
-    private static final String MY_PREF = "my_pref";
-    //    In VideoFilesAdapter we get the thumbnail and video duration now we will initialize the adapter in VideoFilesActivity.
+//    Make public
+    public static final String MY_PREF = "my_pref";
+//    In VideoFilesAdapter we get the thumbnail and video duration now we will initialize the adapter in VideoFilesActivity.
     RecyclerView recyclerView;
     private ArrayList<MediaFiles> videoFilesArrayList = new ArrayList<>();
     static VideoFilesAdapter videoFilesAdapter;  // Make it static so we can call
     String folder_name;
-    //    Create object for SwipeRefreshLayout
+//    Create object for SwipeRefreshLayout
     SwipeRefreshLayout swipeRefreshLayout;
-    //    Create String variable that will be global variable.
+//    Create String variable that will be global variable.
     String sortOrder;
     @SuppressLint("MissingInflatedId")
     @Override
@@ -42,6 +43,14 @@ public class VideoFilesActivity extends AppCompatActivity implements SearchView.
         getSupportActionBar().setTitle(folder_name);  // We have to set this folder_name on toolbar title
         recyclerView = findViewById(R.id.videos_rv);
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_videos);
+
+//        In VideoFilesActivity we will save the folder_name (in onCreate method) in SharedPreferences and receive the folder_name in PlayListDialog class
+        SharedPreferences.Editor editor = getSharedPreferences(MY_PREF, MODE_PRIVATE).edit();
+//        The key name will be playListFolderName and value will be folder_name
+//        Copy the key playListFolderName, in PlayListDialog we will retrieve the folder_name using SharedPreferences
+        editor.putString("playListFolderName", folder_name);
+        editor.apply();
+
         showVideoFiles();
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -55,10 +64,11 @@ public class VideoFilesActivity extends AppCompatActivity implements SearchView.
         });
     }
 
+//    Constructor
     @SuppressLint("NotifyDataSetChanged")
     private void showVideoFiles() {
         videoFilesArrayList = fetchMedia(folder_name);  // Pass the folder name in fetchMedia method
-        videoFilesAdapter = new VideoFilesAdapter(videoFilesArrayList, this);
+        videoFilesAdapter = new VideoFilesAdapter(videoFilesArrayList, this, 0);
         recyclerView.setAdapter(videoFilesAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         videoFilesAdapter.notifyDataSetChanged();
@@ -115,62 +125,64 @@ public class VideoFilesActivity extends AppCompatActivity implements SearchView.
         return super.onCreateOptionsMenu(menu);
     }
 
-//    @Override
-//    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-//        SharedPreferences preferences = getSharedPreferences(MY_PREF, MODE_PRIVATE);
-//        SharedPreferences.Editor editor = preferences.edit();
-//
-//        int id = item.getItemId();
-//        switch (id) {
-//            case R.id.refresh_files:
-//                finish();
-//                startActivity(getIntent());
-//                break;
-//            case R.id.sort_by:
-////                If user clicks on Sort by, we will show AlertDialog that contains 4 radio buttons through which user can sort video by name, length, size and duration accordingly.
-//                AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-//                alertDialog.setTitle("Sort By");
-//                alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialogInterface, int i) {
-////                        When user will click on OK we will hide the AlertDialog
-////                        By clicking on OK after selecting any option in all of the four options, we will apply the changes accordingly.
-//                        editor.apply();
-//                        finish();
-//                        startActivity(getIntent());
-//                        dialogInterface.dismiss();
-//                    }
-//                });
-////                We will create a String variable of Array type
-//                String[] items = {"Name (A to Z)", "Size (Big to Small)", "Date (New to Old", "Length (Long to Short)"};
-//                alertDialog.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {  // -1 because we do not want any item selected as default. If we write 0 means we want first item selected as default
-//                    @Override
-//                    public void onClick(DialogInterface dialogInterface, int i) {
-//                        switch (i) {
-//                            case 0:
-////                                If the user selects the first item i.e. Name from A to Z, we will send the data through SharedPreferences editor.putString(). Key will be sort and the value we want to send for Name sortName.
-//                                editor.putString("sort", "sortName");
-//                                break;
-//                            case 1:
-////                                When user select the second option i.e. Size (Big to Small), we will send the value as sortSize.
-//                                editor.putString("sort", "sortSize");
-//                                break;
-//                            case 2:
-////                                Third option is Date. Value will be sortDate.
-//                                editor.putString("sort", "sortDate");
-//                                break;
-//                            case 3:
-////                                We will keep keep key as same in all the four items.
-//                                editor.putString("sort", "sortLength");
-//                                break;
-//                        }
-//                    }
-//                });
-//                alertDialog.create().show();
-//                break;
-//        }
-//        return super.onOptionsItemSelected(item);
-//    }
+    /*
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        SharedPreferences preferences = getSharedPreferences(MY_PREF, MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.refresh_files:
+                finish();
+                startActivity(getIntent());
+                break;
+            case R.id.sort_by:
+//                If user clicks on Sort by, we will show AlertDialog that contains 4 radio buttons through which user can sort video by name, length, size and duration accordingly.
+                AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+                alertDialog.setTitle("Sort By");
+                alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+//                        When user will click on OK we will hide the AlertDialog
+//                        By clicking on OK after selecting any option in all of the four options, we will apply the changes accordingly.
+                        editor.apply();
+                        finish();
+                        startActivity(getIntent());
+                        dialogInterface.dismiss();
+                    }
+                });
+//                We will create a String variable of Array type
+                String[] items = {"Name (A to Z)", "Size (Big to Small)", "Date (New to Old", "Length (Long to Short)"};
+                alertDialog.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {  // -1 because we do not want any item selected as default. If we write 0 means we want first item selected as default
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        switch (i) {
+                            case 0:
+//                                If the user selects the first item i.e. Name from A to Z, we will send the data through SharedPreferences editor.putString(). Key will be sort and the value we want to send for Name sortName.
+                                editor.putString("sort", "sortName");
+                                break;
+                            case 1:
+//                                When user select the second option i.e. Size (Big to Small), we will send the value as sortSize.
+                                editor.putString("sort", "sortSize");
+                                break;
+                            case 2:
+//                                Third option is Date. Value will be sortDate.
+                                editor.putString("sort", "sortDate");
+                                break;
+                            case 3:
+//                                We will keep keep key as same in all the four items.
+                                editor.putString("sort", "sortLength");
+                                break;
+                        }
+                    }
+                });
+                alertDialog.create().show();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    */
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
