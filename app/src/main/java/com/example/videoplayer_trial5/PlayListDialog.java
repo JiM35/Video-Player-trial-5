@@ -32,10 +32,10 @@ public class PlayListDialog extends BottomSheetDialogFragment {
     VideoFilesAdapter videoFilesAdapter;
     BottomSheetDialog bottomSheetDialog;
     RecyclerView recyclerView;
-//    TextView for showing folder name
+    //    TextView for showing folder name
     TextView folder;
 
-//    Create constructor
+    //    Create constructor
     public PlayListDialog(ArrayList<MediaFiles> arrayList, VideoFilesAdapter videoFilesAdapter) {
         this.arrayList = arrayList;
         this.videoFilesAdapter = videoFilesAdapter;

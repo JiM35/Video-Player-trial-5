@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.app.PictureInPictureParams;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -17,8 +18,10 @@ import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.media.audiofx.AudioEffect;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Rational;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -94,8 +97,13 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     DialogProperties dialogProperties;
     FilePickerDialog filePickerDialog;
 
-    //    Create object for Uri
+//    Create object for Uri
     Uri uriSubtitles;
+
+//    Create object for picture in picture
+    PictureInPictureParams.Builder pictureInPicture;
+
+    boolean isCrossChecked;
 
     private ControlsMode controlsMode;
 
@@ -107,7 +115,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //    Create variable for video playlist - name it as videoList
     ImageView videoBack, lock, unlock, scaling, videoList;
 
-    //    Create object for VideoFilesAdapter
+//    Create object for VideoFilesAdapter
     VideoFilesAdapter videoFilesAdapter;
 //    Create object for RelativeLayout, take the variable as root
     RelativeLayout root;
@@ -147,6 +155,11 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //        Set positive and negative buttons
         filePickerDialog.setPositiveBtnName("OK");
         filePickerDialog.setNegativeBtnName("Cancel");
+//        Initialize the variable - pictureInPicture
+//        If device is greater than android 8, then we are going to show picture in picture mode because this picture in picture mode is available in android 8 - Oreo and above
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            pictureInPicture = new PictureInPictureParams.Builder();
+        }
 
         root = findViewById(R.id.root_layout);
 //        Give id to night mode
@@ -170,7 +183,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //        Initialize the recyclerview - first we will add the items in list
         iconModelArrayList.add(new IconModel(R.drawable.ic_right, ""));
         iconModelArrayList.add(new IconModel(R.drawable.ic_night_mode, "Night"));
-        iconModelArrayList.add(new IconModel(R.drawable.ic_volume_off, "Mute"));
+        iconModelArrayList.add(new IconModel(R.drawable.ic_pip_mode, "Popup"));
+        iconModelArrayList.add(new IconModel(R.drawable.ic_equalizer, "Equalizer"));
         iconModelArrayList.add(new IconModel(R.drawable.ic_rotate, "Rotate"));
 
         playbackIconsAdapter = new PlaybackIconsAdapter(iconModelArrayList, this);
@@ -193,17 +207,18 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                         iconModelArrayList.clear();
                         iconModelArrayList.add(new IconModel(R.drawable.ic_right, ""));
                         iconModelArrayList.add(new IconModel(R.drawable.ic_night_mode, "Night"));
-                        iconModelArrayList.add(new IconModel(R.drawable.ic_volume_off, "Mute"));
+                        iconModelArrayList.add(new IconModel(R.drawable.ic_pip_mode, "Popup"));
+                        iconModelArrayList.add(new IconModel(R.drawable.ic_equalizer, "Equalizer"));
                         iconModelArrayList.add(new IconModel(R.drawable.ic_rotate, "Rotate"));
                         playbackIconsAdapter.notifyDataSetChanged();
                         expand = false;
                     } else {
 //                        When user first clicks on right icon, this else code will execute
 //                        We have to expand the list and add the icons in recyclerview.
-                        if (iconModelArrayList.size() == 4) {
+                        if (iconModelArrayList.size() == 5) {
+                            iconModelArrayList.add(new IconModel(R.drawable.ic_volume_off, "Mute"));
                             iconModelArrayList.add(new IconModel(R.drawable.ic_volume, "Volume"));
                             iconModelArrayList.add(new IconModel(R.drawable.ic_brightness, "Brightness"));
-                            iconModelArrayList.add(new IconModel(R.drawable.ic_equalizer, "Equalizer"));
                             iconModelArrayList.add(new IconModel(R.drawable.ic_speed, "Speed"));
                             iconModelArrayList.add(new IconModel(R.drawable.ic_subtitles, "Subtitles"));
                         }
@@ -234,8 +249,61 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                     }
                 }
 
-//                Third icon for Mute and Unmute
+//                Icon three for popup
+//                TODO: This Third icon was for Mute and Unmute
                 if (position == 2) {
+/*
+                    Open AndroidManifest.xml file and add these attributes android:configChanges="screenLayout|smallestScreenSize|keyboardHidden|uiMode"
+                    More attributes will be android:excludeFromRecents="true" - This attribute will prevent the app from showing multiple times in recent apps of device
+                    android:excludeFromRecents="true"
+                    android:exported="true"
+                    android:resizeableActivity="true"
+                    android:supportsPictureInPicture="true"
+*/
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                        We take aspect ratio for showing picture in picture mode, show it in Rational
+//                        The default aspect ratio for showing pip mode is 16:9
+                        Rational aspectRatio = new Rational(16, 9);
+                        pictureInPicture.setAspectRatio(aspectRatio);
+//                        Initialize the method enterPictureInPictureMode
+                        enterPictureInPictureMode(pictureInPicture.build());
+                    } else {
+                        Log.wtf("not oreo", "yes");
+                    }
+                }
+
+//                Equalizer
+                if (position == 3) {
+                    Intent intent = new Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL);
+                    if ((intent.resolveActivity(getPackageManager()) != null)) {
+                        startActivityForResult(intent, 123);
+                    } else {
+                        Toast.makeText(VideoPlayerActivity.this, "No Equalizer Found", Toast.LENGTH_SHORT).show();
+                    }
+                    playbackIconsAdapter.notifyDataSetChanged();
+                }
+
+//                Rotate
+//                TODO: This icon was for Volume
+                if (position == 4) {
+                    //                    If position equal to 3 means our item is on position 4
+//                    Check orientation (landscape or portrait) of screen using (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+                    if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+//                        If the screen orientation is portrait we will change it to landscape using (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                        playbackIconsAdapter.notifyDataSetChanged();
+                    } else if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//                        If screen orientation is landscape, change it to portrait
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+//                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                        playbackIconsAdapter.notifyDataSetChanged();
+                    }
+                }
+
+//                Mute
+//                TODO: This icon was for Brightness - we will initialize the BrightnessDialog in VideoPlayerActivity.
+                if (position == 5) {
 //                    Create a boolean value of Mute - boolean mute = false;
                     if (mute) {
 //                        User again clicked on Mute icon
@@ -252,25 +320,10 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                     }
                 }
 
-//                Orientation
-                if (position == 3) {
-//                    If position equal to 3 means our item is on position 4
-//                    Check orientation (landscape or portrait) of screen using (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
-                    if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-//                        If the screen orientation is portrait we will change it to landscape using (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
-                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-                        playbackIconsAdapter.notifyDataSetChanged();
-                    } else if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//                        If screen orientation is landscape, change it to portrait
-                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-//                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-                        playbackIconsAdapter.notifyDataSetChanged();
-                    }
-
-                }
-
 //                Volume
-                if (position == 4) {
+//                TODO: This icon was for Equalizer - we will get default Equalizer of device. We will navigate the user to default equalizer if the device has using Intent.
+//                In else statement if device does not have any equalizer we will show a Toast
+                if (position == 6) {
 //                    We will control volume using seekbar
 //                    First create dialog in java class
 //                    Instantiate the VolumeDialog class
@@ -278,33 +331,20 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                     VolumeDialog volumeDialog = new VolumeDialog();
                     volumeDialog.show(getSupportFragmentManager(), "dialog");
                     playbackIconsAdapter.notifyDataSetChanged();
-
                 }
 
-//                Brightness - we will initialize the BrightnessDialog in VideoPlayerActivity.
-                if (position == 5) {
-
+//                Brightness
+//                TODO: Playback speed - Means user clicked on speed, we will show a dialog for choosing playback speed
+//                Pass VideoPlayerActivity.this as context
+                if (position == 7) {
                     BrightnessDialog brightnessDialog = new BrightnessDialog();
                     brightnessDialog.show(getSupportFragmentManager(), "dialog");
                     playbackIconsAdapter.notifyDataSetChanged();
                 }
 
-//                Equalizer - we will get default Equalizer of device. We will navigate the user to default equalizer if the device has using Intent.
-//                In else statement if device does not have any equalizer we will show a Toast
-                if (position == 6) {
-                    Intent intent = new Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL);
-                    if ((intent.resolveActivity(getPackageManager()) != null)) {
-                        startActivityForResult(intent, 123);
-                    } else {
-                        Toast.makeText(VideoPlayerActivity.this, "No Equalizer Found", Toast.LENGTH_SHORT).show();
-                    }
-                    playbackIconsAdapter.notifyDataSetChanged();
-                }
-
 //                Playback speed
-//                Means user clicked on speed, we will show a dialog for choosing playback speed
-//                Pass VideoPlayerActivity.this as context
-                if (position == 7) {
+//                TODO: Subtitles
+                if (position == 8) {
                     AlertDialog.Builder alertDialog = new AlertDialog.Builder(VideoPlayerActivity.this);
                     alertDialog.setTitle("Select Playback Speed").setPositiveButton("OK", null);
 //                    Create Array type String
@@ -366,7 +406,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                 }
 
 //                Subtitles
-                if (position == 8) {
+                if (position == 9) {
 //                    If user clicked on subtitle icon
 //                    First we are going to use file picker library for showing the directories
 //                    If we write DialogConfigs.MULTI_MODE it will mean user can select more than one file but we do not want user to select more than one file that is why we will use DialogConfigs.SINGLE_MODE
@@ -452,7 +492,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         playError();
     }
 
-    //    Check screen orientation and play the video accordingly
+//    Check screen orientation and play the video accordingly
 //    We pass the screenOrientation method in onCreate
     private void screenOrientation() {
         try {
@@ -507,11 +547,19 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     }
 
 //    We will override onPause method - player.setPlayWhenReady() - because when the app pause, the video will also pause through the player.setPlayWhenReady() as false
+//    The video is in picture in picture mode but is paused. We have to work on onPause method
     @Override
     protected void onPause() {
         super.onPause();
         player.setPlayWhenReady(false);
         player.getPlaybackState();
+//        If the video is in picture in picture mode, then we will play the video
+        if (isInPictureInPictureMode()) {
+            player.setPlayWhenReady(true);
+        } else {
+            player.setPlayWhenReady(false);
+            player.getPlaybackState();
+        }
     }
 
 //    When our app is resumed again we will play the video
@@ -708,5 +756,28 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
             scaling.setOnClickListener(firstListener);
         }
     };
+
+    @Override
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode);
+        isCrossChecked = isInPictureInPictureMode;
+        if (isInPictureInPictureMode) {
+//            If the video is in picture in picture mode then we will hide all controls by the line - playerView.hideController();
+            playerView.hideController();
+        } else {
+//            Or else we will show the controls if user press on close button of picture in picture mode and play the video in full screen
+            playerView.showController();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+//        If user clicks on close button
+        if (isCrossChecked) {
+            player.release();
+            finish();
+        }
+    }
 }
 
