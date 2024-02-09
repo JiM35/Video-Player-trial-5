@@ -1,0 +1,7 @@
+![Screenshot_2024-02-09-23-26-14-883_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/5784a7a3-821e-4df5-b7a5-898c89f6f7c3)
+![Screenshot_2024-02-09-23-26-07-515_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/df6d45fa-3c99-47d0-98e2-f8a9f1f1e3c6)
+![Screenshot_2024-02-09-23-26-04-554_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/d79d64f2-8e5f-40f9-8380-083742fe8048)
+![Screenshot_2024-02-09-23-26-01-913_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/cafc82fc-473c-40a2-861f-97b8f2f73c2b)
+![Screenshot_2024-02-09-23-25-57-948_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/6c30e74d-0df0-454d-8f26-fd6e85a67ef0)
+![Screenshot_2024-02-09-23-25-54-512_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/b6e73edd-c6fe-417d-ae98-59dc39b66912)
+![Screenshot_2024-02-09-23-25-50-267_com example videoplayer_trial5](https://github.com/JiM35/Video-Player-trial-5/assets/48186310/6da299d7-6270-4b14-a31a-21c5bad391b4)
