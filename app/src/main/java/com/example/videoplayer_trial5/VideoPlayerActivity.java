@@ -1,13 +1,5 @@
 package com.example.videoplayer_trial5;
 
-import static com.google.android.exoplayer2.Format.*;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.annotation.SuppressLint;
 import android.app.PictureInPictureParams;
 import android.content.DialogInterface;
@@ -15,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
 import android.media.audiofx.AudioEffect;
 import android.net.Uri;
@@ -25,17 +18,26 @@ import android.util.Rational;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.bullhead.equalizer.EqualizerFragment;
+import com.bullhead.equalizer.Settings;
 import com.developer.filepicker.controller.DialogSelectionListener;
 import com.developer.filepicker.model.DialogConfigs;
 import com.developer.filepicker.model.DialogProperties;
 import com.developer.filepicker.view.FilePickerDialog;
 import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.PlaybackParameters;
@@ -43,18 +45,14 @@ import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.MergingMediaSource;
 import com.google.android.exoplayer2.source.ProgressiveMediaSource;
-import com.google.android.exoplayer2.source.SingleSampleMediaSource;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
-import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 
 // ExoPlayer is an alternative to Android's Media Player. By using Media Player it is very easy to play videos but if you want to create advanced player features using media player then it will require much effort for developers - that is why we will use ExoPlayer for creating those advanced features.
 
@@ -104,6 +102,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     PictureInPictureParams.Builder pictureInPicture;
 
     boolean isCrossChecked;
+//    Create object for FrameLayout
+    FrameLayout eqContainer;
 
     private ControlsMode controlsMode;
 
@@ -168,6 +168,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         videoList = findViewById(R.id.video_list);
 //        Allocate memory to recyclerview
         recyclerViewIcons = findViewById(R.id.recyclerview_icons);
+        eqContainer = findViewById(R.id.eqFrame);
 
         title.setText(videoTitle);
 
@@ -274,20 +275,26 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                 }
 
 //                Equalizer
+//                When user clicks on position 3, we will open equalizer
                 if (position == 3) {
-                    Intent intent = new Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL);
-                    if ((intent.resolveActivity(getPackageManager()) != null)) {
-                        startActivityForResult(intent, 123);
-                    } else {
-                        Toast.makeText(VideoPlayerActivity.this, "No Equalizer Found", Toast.LENGTH_SHORT).show();
+//                    Check if visibility is gone, we will set the visibility of equalizer as visible
+                    if (eqContainer.getVisibility() == View.GONE) {
+                        eqContainer.setVisibility(View.VISIBLE);
                     }
+//                    Get session id
+                    final int sessionId = player.getAudioSessionId();
+//                    Create object of Settings - choose com.bullhead.equalizer
+                    Settings.isEditing = false;
+//                    Create object for equalizer fragment
+                    EqualizerFragment equalizerFragment = EqualizerFragment.newBuilder().setAccentColor(Color.parseColor(String.valueOf("#1A78F2"))).setAudioSessionId(sessionId).build();
+                    getSupportFragmentManager().beginTransaction().replace(R.id.eqFrame, equalizerFragment).commit();
                     playbackIconsAdapter.notifyDataSetChanged();
                 }
 
 //                Rotate
 //                TODO: This icon was for Volume
                 if (position == 4) {
-                    //                    If position equal to 3 means our item is on position 4
+//                    If position equal to 3 means our item is on position 4
 //                    Check orientation (landscape or portrait) of screen using (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
                     if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
 //                        If the screen orientation is portrait we will change it to landscape using (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
@@ -397,7 +404,6 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 
                                 default:
                                     break;
-
                             }
                         }
                     });
@@ -540,9 +546,19 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //    When user clicks on back button, create if statement below super call for checking if player is playing, then it will stop the player
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-        if (player.isPlaying()) {
-            player.stop();
+        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.eqFrame);
+//        If by clicking onBackPressed if equalizer visibility is gone, then we will use the super call
+        if (eqContainer.getVisibility() == View.GONE) {
+            super.onBackPressed();
+        } else {
+            if (fragment.isVisible() && eqContainer.getVisibility() == View.VISIBLE) {
+                eqContainer.setVisibility(View.GONE);
+            } else {
+                if (player != null) {
+                    player.release();
+                }
+                super.onBackPressed();
+            }
         }
     }
 
@@ -668,7 +684,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         int viewId = view.getId();
 
         if (viewId == R.id.video_back) {
-            // When user clicks on back button, we will check if video is playing, we will release the player
+//            When user clicks on back button, we will check if video is playing, we will release the player
             if (player != null) {
                 player.release();
             }
@@ -682,14 +698,14 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
             finish();
 
         } else if (viewId == R.id.lock) {
-            // When user will click on lock icon, we will unlock the video and show all controls by using ControlsMode.
+//            When user will click on lock icon, we will unlock the video and show all controls by using ControlsMode.
             controlsMode = ControlsMode.FULLSCREEN;
             root.setVisibility(View.VISIBLE);
             lock.setVisibility(View.INVISIBLE);  // The icon will be invisible (Part 17 9:07 🤣🤣🤣🤣🤣)
             Toast.makeText(this, "Unlocked", Toast.LENGTH_SHORT).show();
 
         } else if (viewId == R.id.unlock) {
-            // When user will first click on unlock button, we will lock the video and hide all the controls.
+//            When user will first click on unlock button, we will lock the video and hide all the controls.
             controlsMode = ControlsMode.LOCK;  // It will lock the video
             root.setVisibility(View.INVISIBLE);
             lock.setVisibility(View.VISIBLE);

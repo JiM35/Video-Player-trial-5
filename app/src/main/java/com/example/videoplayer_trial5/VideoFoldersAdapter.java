@@ -71,6 +71,7 @@ public class VideoFoldersAdapter extends RecyclerView.Adapter<VideoFoldersAdapte
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView folderName, folder_path, noOfFiles;
+
         public ViewHolder(@NonNull View itemView) {
 
             super(itemView);
@@ -80,7 +81,7 @@ public class VideoFoldersAdapter extends RecyclerView.Adapter<VideoFoldersAdapte
         }
     }
 
-    //    Create method of int type - noOfFiles. We will call the noOfFiles method for getting total number of video files in onBindViewHolder.
+//    Create method of int type - noOfFiles. We will call the noOfFiles method for getting total number of video files in onBindViewHolder.
     int noOfFiles(String folder_name) {
 
         int files_no = 0;

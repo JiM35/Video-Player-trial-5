@@ -301,6 +301,7 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
 //        Assign IDs to TextViews and ImageViews
         ImageView thumbnail, menu_more;
         TextView videoName, videoSize, videoDuration;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             thumbnail = itemView.findViewById(R.id.thumbnail);
@@ -311,9 +312,9 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
         }
     }
 
-    //    We have to change the milliseconds into hours, minutes and seconds according to the duration of video. For this we have to create a method - timeConversion
+//    We have to change the milliseconds into hours, minutes and seconds according to the duration of video. For this we have to create a method - timeConversion
     @SuppressLint("DefaultLocale")
-    public String timeConversion(long value){
+    public String timeConversion(long value) {
         String videoTime;
         int duration = (int) value;
         int hrs = (duration / 3600000);  // 3600000 - milliseconds in one hour

@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
-            // If the user grants the permission by manually going to settings and again user deny the permission in settings and go back to the app, the onResume method will call and that will navigate the user to MainActivity. We will check if permission is denied, then we will send user again to the settings.
+//            If the user grants the permission by manually going to settings and again user deny the permission in settings and go back to the app, the onResume method will call and that will navigate the user to MainActivity. We will check if permission is denied, then we will send user again to the settings.
             Toast.makeText(this, "Click on permissions and allow storage", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);  // If user clicks on allow button then deny button and goes back then the Main Activity code will compile then show a Toast then again move the user to setting window.
             Uri uri = Uri.fromParts("package", getPackageName(), null);
@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         }
 //        Below if statement we have to allocate memory to recyclerView using id
         recyclerView = findViewById(R.id.folders_rv);
-        //        Allocate memory to swipeRefreshLayout
+//        Allocate memory to swipeRefreshLayout
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_folders);
         showFolder();
 //        setOnRefreshListener will call when user swipes down for refreshing the layout and when the user swipes down the showFolder method will refresh the adapter and swipeRefreshLayout.setRefreshing(false) will hide the refresh layout.
@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    //     Here we are going to initialize the adapter
+//     Here we are going to initialize the adapter
     @SuppressLint("NotifyDataSetChanged")
     private void showFolder() {
 //        fetchMedia() will return all the folders
