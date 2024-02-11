@@ -13,8 +13,10 @@ import android.media.audiofx.AudioEffect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Rational;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -25,6 +27,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -57,17 +60,17 @@ import java.util.ArrayList;
 // ExoPlayer is an alternative to Android's Media Player. By using Media Player it is very easy to play videos but if you want to create advanced player features using media player then it will require much effort for developers - that is why we will use ExoPlayer for creating those advanced features.
 
 public class VideoPlayerActivity extends AppCompatActivity implements View.OnClickListener {
-//    Now we are getting the video list that we are sending through intent. First create arraylist
+    //    Now we are getting the video list that we are sending through intent. First create arraylist
     ArrayList<MediaFiles> mVideoFiles = new ArrayList<>();
 
-//    Create object for PlayerView and SimpleExoPlayer with variables as playerView and player
+    //    Create object for PlayerView and SimpleExoPlayer with variables as playerView and player
     PlayerView playerView;
     SimpleExoPlayer player;
     int position;
     String videoTitle;
     TextView title;
 
-//    Initialize the Recycler
+    //    Initialize the Recycler
 //    Horizontal RecyclerView variables
     private ArrayList<IconModel> iconModelArrayList = new ArrayList<>();
     PlaybackIconsAdapter playbackIconsAdapter;
@@ -105,6 +108,22 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //    Create object for FrameLayout
     FrameLayout eqContainer;
 
+//    Create variables for device height and width
+//    Swipe and zoom variables
+    private int device_height, device_width;
+    boolean start = false;
+//    Create left and right variables
+    boolean left, right;
+//    Create base x and y float variables
+    private float baseX, baseY;
+    boolean swipe_move = false;
+//    Create long variable for difference X and difference Y
+    private long diffX, diffY;
+    public static final int MINIMUM_DISTANCE = 100;
+    boolean success = false;
+
+//    Swipe and zoom variables
+
     private ControlsMode controlsMode;
 
     public enum ControlsMode {
@@ -137,6 +156,101 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //        For getting ArrayList from VideoFilesAdapter we will use Parcelable
         mVideoFiles = getIntent().getExtras().getParcelableArrayList("videoArrayList");
         screenOrientation();
+
+//        Organise the code using methods -
+        initViews();
+
+//        Create method for playing the video through Uri
+        playVideo();
+
+//        We first check the device width and height - use DisplayMetrics
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        device_width = displayMetrics.widthPixels;
+        device_height = displayMetrics.heightPixels;
+
+//        Initialize the OnTouchListener class
+        playerView.setOnTouchListener(new OnSwipeTouchListener(this) {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                switch (motionEvent.getAction()) {
+//                    ACTION_DOWN will be called when user taps on the screen
+                    case MotionEvent.ACTION_DOWN:
+                        start = true;
+                        if (motionEvent.getX() < device_width / 2) {
+                            left = true;
+                            right = false;
+//                            We are dividing the screen width into 2 parts
+                        } else if (motionEvent.getX() > (device_width / 2)) {
+//                            We will take the right side as true and left will be false means user will click on right side of the screen
+                            left = false;
+                            right = true;
+                        }
+                        baseX = motionEvent.getX();
+                        baseY = motionEvent.getY();
+                        break;
+
+//                    ACTION_MOVE will be called when user swipes on the screen
+                    case MotionEvent.ACTION_MOVE:
+                        swipe_move = true;
+                        diffX = (long) Math.ceil(motionEvent.getX() - baseX);
+                        diffY = (long) Math.ceil(motionEvent.getX() - baseY);
+                        double brightnessSpeed = 0.01;
+                        if (Math.abs(diffY) > MINIMUM_DISTANCE) {
+                            start = true;
+                            if (Math.abs(diffY) > Math.abs(diffX)) {
+                                boolean value;
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//                                    Check if the user can write or not
+                                    value = android.provider.Settings.System.canWrite(getApplicationContext());
+                                    if (value) {
+//                                        If the user has access to write then we will check if its left side then we will show a Toast
+                                        if (left) {
+                                            Toast.makeText(getApplicationContext(), "Left Swipe", Toast.LENGTH_SHORT).show();
+//                                        If it is right side, then Toast will be right swipe
+                                        } else if (right) {
+                                            Toast.makeText(getApplicationContext(), "Right Swipe", Toast.LENGTH_SHORT).show();
+                                        }
+                                        success = true;
+                                    } else {
+//                                We will check if the user has right access, then we will show this Toast in else if, if user does not have right access we will navigate the user to setting screen for allowing access
+//                                Here we will navigate the user to setting screen
+                                        Toast.makeText(getApplicationContext(), "Allow write settings for swipe controls", Toast.LENGTH_SHORT).show();
+                                        Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                                        intent.setData(Uri.parse("package:" + getPackageName()));
+//                                        First parameter will be intent, second we will take request code as 111
+                                        startActivityForResult(intent, 111);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+
+//                    ACTION_UP will be called when user removes his finger from the screen
+                    case MotionEvent.ACTION_UP:
+//                        When user removes his finger we will take the swipe_move variable as false, also start variable as false
+                        swipe_move = false;
+                        start = false;
+                        break;
+                }
+                return super.onTouch(view, motionEvent);
+            }
+
+            @Override
+            public void onDoubleTouch() {
+                super.onDoubleTouch();
+            }
+
+            @Override
+            public void onSingleTouch() {
+                super.onSingleTouch();
+            }
+        });
+
+        horizontalIconList();
+    }
+
+    private void initViews() {
         nextButton = findViewById(R.id.exo_next);
         previousButton = findViewById(R.id.exo_prev);
         title = findViewById(R.id.video_title);
@@ -180,8 +294,36 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //        Set setOnClickListener on videoList (for showing playlist)
         videoList.setOnClickListener(this);
         scaling.setOnClickListener(firstListener);  // Pass the View name
+    }
 
-//        Initialize the recyclerview - first we will add the items in list
+    private void playVideo() {
+        String path = mVideoFiles.get(position).getPath();
+        Uri uri = Uri.parse(path);
+        player = new SimpleExoPlayer.Builder(this).setSeekBackIncrementMs(10000).setSeekForwardIncrementMs(10000).build();
+//        Now create object for default data source factory
+        DefaultDataSourceFactory dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, "app"));
+//        We will use concatenating media source
+        concatenatingMediaSource = new ConcatenatingMediaSource();
+//        Create a for loop for playing the video in loop
+        for (int i = 0; i < mVideoFiles.size(); i++) {
+            new File(String.valueOf(mVideoFiles.get(i)));
+            MediaSource mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(Uri.parse(String.valueOf(uri))));
+            concatenatingMediaSource.addMediaSource(mediaSource);
+        }
+        playerView.setPlayer(player);
+        playerView.setKeepScreenOn(true);  // The setKeepScreenOn will prevent the screen from dimming after the screen timeout reaches.
+        player.setPlaybackParameters(parameters);
+        player.prepare(concatenatingMediaSource);
+        player.seekTo(position, C.TIME_UNSET);
+//        Pass method for showing the error effects of player got while playing video
+        playError();
+    }
+
+//    We will work on swipe
+
+
+    private void horizontalIconList() {
+        //        Initialize the recyclerview - first we will add the items in list
         iconModelArrayList.add(new IconModel(R.drawable.ic_right, ""));
         iconModelArrayList.add(new IconModel(R.drawable.ic_night_mode, "Night"));
         iconModelArrayList.add(new IconModel(R.drawable.ic_pip_mode, "Popup"));
@@ -438,35 +580,9 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                 }
             }
         });
-
-//        Create method for playing the video through Uri
-        playVideo();
     }
 
-    private void playVideo() {
-        String path = mVideoFiles.get(position).getPath();
-        Uri uri = Uri.parse(path);
-        player = new SimpleExoPlayer.Builder(this).setSeekBackIncrementMs(10000).setSeekForwardIncrementMs(10000).build();
-//        Now create object for default data source factory
-        DefaultDataSourceFactory dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, "app"));
-//        We will use concatenating media source
-        concatenatingMediaSource = new ConcatenatingMediaSource();
-//        Create a for loop for playing the video in loop
-        for (int i = 0; i < mVideoFiles.size(); i++) {
-            new File(String.valueOf(mVideoFiles.get(i)));
-            MediaSource mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(Uri.parse(String.valueOf(uri))));
-            concatenatingMediaSource.addMediaSource(mediaSource);
-        }
-        playerView.setPlayer(player);
-        playerView.setKeepScreenOn(true);  // The setKeepScreenOn will prevent the screen from dimming after the screen timeout reaches.
-        player.setPlaybackParameters(parameters);
-        player.prepare(concatenatingMediaSource);
-        player.seekTo(position, C.TIME_UNSET);
-//        Pass method for showing the error effects of player got while playing video
-        playError();
-    }
-
-//    Copy the playVideo method above and paste below the same method. Rename it playVideoSubtitles and make some changes
+    //    Copy the playVideo method above and paste below the same method. Rename it playVideoSubtitles and make some changes
 //    This method will be for playing videos with subtitles
     private void playVideoSubtitles(Uri subtitle) {
         long oldPosition = player.getCurrentPosition();
@@ -498,7 +614,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         playError();
     }
 
-//    Check screen orientation and play the video accordingly
+    //    Check screen orientation and play the video accordingly
 //    We pass the screenOrientation method in onCreate
     private void screenOrientation() {
         try {
@@ -543,7 +659,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         player.setPlayWhenReady(true);
     }
 
-//    When user clicks on back button, create if statement below super call for checking if player is playing, then it will stop the player
+    //    When user clicks on back button, create if statement below super call for checking if player is playing, then it will stop the player
     @Override
     public void onBackPressed() {
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.eqFrame);
@@ -578,7 +694,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-//    When our app is resumed again we will play the video
+    //    When our app is resumed again we will play the video
     @Override
     protected void onResume() {
         super.onResume();
@@ -793,6 +909,25 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         if (isCrossChecked) {
             player.release();
             finish();
+        }
+    }
+
+//    We used the request code 111, we will override the method in onActivityResult
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+//        If requestCode is 111, then we take a boolean value
+        if (requestCode == 111) {
+            boolean value;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                value = android.provider.Settings.System.canWrite(getApplicationContext());
+//                Check if user has write access
+                if (value) {
+                    success = true;
+                } else {
+                    Toast.makeText(getApplicationContext(), "Permission Not Granted (Swipe to Control Brightness & Volume)", Toast.LENGTH_SHORT).show();
+                }
+            }
         }
     }
 }

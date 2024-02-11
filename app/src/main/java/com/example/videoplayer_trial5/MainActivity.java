@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
     }
 
+    @SuppressLint("Range")
     public ArrayList<MediaFiles> fetchMedia() {
         ArrayList<MediaFiles> mediaFilesArrayList = new ArrayList<>();
         Uri uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
@@ -77,13 +78,13 @@ public class MainActivity extends AppCompatActivity {
 //        If cursor is not equal to null means cursor has data then we are going to get all the Strings. We will use do while - do while loop is used to execute a block of statement until the given condition is true.
         if (cursor != null && cursor.moveToNext()) {
             do {
-                @SuppressLint("Range") String id = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media._ID));
-                @SuppressLint("Range") String title = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.TITLE));
-                @SuppressLint("Range") String displayName = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME));
-                @SuppressLint("Range") String size = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.SIZE));
-                @SuppressLint("Range") String duration = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DURATION));
-                @SuppressLint("Range") String path = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DATA));
-                @SuppressLint("Range") String dateAdded = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DATE_ADDED));
+                String id = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media._ID));
+                String title = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.TITLE));
+                String displayName = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME));
+                String size = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.SIZE));
+                String duration = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DURATION));
+                String path = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DATA));
+                String dateAdded = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DATE_ADDED));
 //                You have to keep the order of the variables same to the order of variables in MediaFiles model class.
                 MediaFiles mediaFiles = new MediaFiles(id, title, displayName, size, duration, path, dateAdded);
 //                Set the folder path to all folder list variable created above  - private ArrayList<String> allFolderList = new ArrayList<>();
