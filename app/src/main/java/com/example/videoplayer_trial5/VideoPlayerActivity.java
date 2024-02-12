@@ -181,7 +181,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                             left = true;
                             right = false;
 //                            We are dividing the screen width into 2 parts
-                        } else if (motionEvent.getX() > (device_width / 2)) {
+                        } else {
+//                        } else if (motionEvent.getX() > (device_width / 2)) {
 //                            We will take the right side as true and left will be false means user will click on right side of the screen
                             left = false;
                             right = true;
