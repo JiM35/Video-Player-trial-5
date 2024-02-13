@@ -145,6 +145,10 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     ScaleGestureDetector scaleGestureDetector;
 //    Create a scale factor variable - the scale factor value is 1.0f i.e. 100% by default
     private float scale_factor = 1.0f;
+//    Create boolean variable
+    boolean double_tap = false;
+    //    Initialize RelativeLayout
+    RelativeLayout double_tap_play_pause;
 
 //    Swipe and zoom variables
 
@@ -341,6 +345,17 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
             @Override
             public void onDoubleTouch() {
                 super.onDoubleTouch();
+                if (double_tap) {
+//                    When user double taps on the screen this if statement will play the video
+                    player.setPlayWhenReady(true);  // Play the video
+                    double_tap_play_pause.setVisibility(View.GONE);  // Hide the double_tap_play_pause design
+                    double_tap = false;
+//                When for the first time the user double taps on the screen, the else statement will call
+                } else {
+                    player.setPlayWhenReady(false);  // This will pause the video
+                    double_tap_play_pause.setVisibility(View.VISIBLE);
+                    double_tap = true;
+                }
             }
 
             @Override
@@ -354,6 +369,10 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //                    Then hide all the controllers in second tap
                     playerView.hideController();
                     singleTap = true;
+                }
+//                Check if double tap is visible, then on single click double_tap_play_pause, visibility will be gone
+                if (double_tap_play_pause.getVisibility() == View.VISIBLE) {
+                    double_tap_play_pause.setVisibility(View.GONE);
                 }
             }
         });
@@ -415,6 +434,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         zoomLayout = findViewById(R.id.zoom_layout);
         zoom_percentage = findViewById(R.id.zoom_percentage);
         zoomContainer = findViewById(R.id.zoom_container);
+        double_tap_play_pause = findViewById(R.id.double_tap_play_pause);
 
 //        Initialize the scaleGestureDetector. The first parameter is context, second parameter is class we will create - ScaleDetector
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleDetector());
