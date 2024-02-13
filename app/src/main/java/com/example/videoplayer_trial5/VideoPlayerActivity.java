@@ -20,6 +20,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Rational;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -65,64 +66,64 @@ import java.util.ArrayList;
 // ExoPlayer is an alternative to Android's Media Player. By using Media Player it is very easy to play videos but if you want to create advanced player features using media player then it will require much effort for developers - that is why we will use ExoPlayer for creating those advanced features.
 
 public class VideoPlayerActivity extends AppCompatActivity implements View.OnClickListener {
-//    Now we are getting the video list that we are sending through intent. First create arraylist
+    //    Now we are getting the video list that we are sending through intent. First create arraylist
     ArrayList<MediaFiles> mVideoFiles = new ArrayList<>();
 
-//    Create object for PlayerView and SimpleExoPlayer with variables as playerView and player
+    //    Create object for PlayerView and SimpleExoPlayer with variables as playerView and player
     PlayerView playerView;
     SimpleExoPlayer player;
     int position;
     String videoTitle;
     TextView title;
 
-//    Initialize the Recycler
+    //    Initialize the Recycler
 //    Horizontal RecyclerView variables
     private ArrayList<IconModel> iconModelArrayList = new ArrayList<>();
     PlaybackIconsAdapter playbackIconsAdapter;
 
-//    Create object for recyclerview
+    //    Create object for recyclerview
     RecyclerView recyclerViewIcons;
     boolean expand = false;
-//    Create object of View
+    //    Create object of View
     View nightMode;
 
-//    Create boolean value for night_mode
+    //    Create boolean value for night_mode
     boolean dark = false;
 
-//    Create boolean value for Mute
+    //    Create boolean value for Mute
     boolean mute = false;
 
-//    We will create an object for playback parameters
+    //    We will create an object for playback parameters
     PlaybackParameters parameters;
 
-//    Float variable for speed
+    //    Float variable for speed
     float speed;
 
-//    When user clicks subtitles icon, we are going to use file picker library for showing directories
+    //    When user clicks subtitles icon, we are going to use file picker library for showing directories
 //    We will create object for DialogProperties
     DialogProperties dialogProperties;
     FilePickerDialog filePickerDialog;
 
-//    Create object for Uri
+    //    Create object for Uri
     Uri uriSubtitles;
 
-//    Create object for picture in picture
+    //    Create object for picture in picture
     PictureInPictureParams.Builder pictureInPicture;
 
     boolean isCrossChecked;
-//    Create object for FrameLayout
+    //    Create object for FrameLayout
     FrameLayout eqContainer;
 
-//    Create int variables for device height and width, brightness
+    //    Create int variables for device height and width, brightness
 //    Swipe and zoom variables
     private int device_height, device_width, brightness, media_volume;
     boolean start = false;
-//    Create left and right variables
+    //    Create left and right variables
     boolean left, right;
-//    Create base x and y float variables
+    //    Create base x and y float variables
     private float baseX, baseY;
     boolean swipe_move = false;
-//    Create long variable for difference X and difference Y
+    //    Create long variable for difference X and difference Y
     private long diffX, diffY;
     public static final int MINIMUM_DISTANCE = 100;
     boolean success = false;
@@ -131,10 +132,19 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     LinearLayout vol_progress_container, vol_text_container, brt_progress_container, brt_text_container;
     ImageView vol_icon, brt_icon;
     AudioManager audioManager;
-//    Create object for ContentResolver
+    //    Create object for ContentResolver
     private ContentResolver contentResolver;
     private Window window;
     boolean singleTap = false;
+//    Initialize RelativeLayout for zoom_layout we created in exo_layout_view
+    RelativeLayout zoomLayout;
+//    Also RelativeLayout for zoom container that we have created in swipe_zoom_design
+    RelativeLayout zoomContainer;
+    TextView zoom_percentage;
+//    Create object for scale gesture detector
+    ScaleGestureDetector scaleGestureDetector;
+//    Create a scale factor variable - the scale factor value is 1.0f i.e. 100% by default
+    private float scale_factor = 1.0f;
 
 //    Swipe and zoom variables
 
@@ -144,13 +154,13 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         LOCK, FULLSCREEN
     }
 
-//    Create object for ImageView
+    //    Create object for ImageView
 //    Create variable for video playlist - name it as videoList
     ImageView videoBack, lock, unlock, scaling, videoList;
 
-//    Create object for VideoFilesAdapter
+    //    Create object for VideoFilesAdapter
     VideoFilesAdapter videoFilesAdapter;
-//    Create object for RelativeLayout, take the variable as root
+    //    Create object for RelativeLayout, take the variable as root
     RelativeLayout root;
     ConcatenatingMediaSource concatenatingMediaSource;
     ImageView nextButton, previousButton;
@@ -323,6 +333,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                         brt_text_container.setVisibility(View.GONE);
                         break;
                 }
+//                Call scaleGestureDetector in playerView.setOnTouchListener - most important for zoom layout
+                scaleGestureDetector.onTouchEvent(motionEvent);
                 return super.onTouch(view, motionEvent);
             }
 
@@ -398,6 +410,14 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 
         vol_icon = findViewById(R.id.vol_icon);
         brt_icon = findViewById(R.id.brt_icon);
+
+//        Initialize views
+        zoomLayout = findViewById(R.id.zoom_layout);
+        zoom_percentage = findViewById(R.id.zoom_percentage);
+        zoomContainer = findViewById(R.id.zoom_container);
+
+//        Initialize the scaleGestureDetector. The first parameter is context, second parameter is class we will create - ScaleDetector
+        scaleGestureDetector = new ScaleGestureDetector(this, new ScaleDetector());
 
 //        Initialize audioManager
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -700,7 +720,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         });
     }
 
-//    Copy the playVideo method above and paste below the same method. Rename it playVideoSubtitles and make some changes
+    //    Copy the playVideo method above and paste below the same method. Rename it playVideoSubtitles and make some changes
 //    This method will be for playing videos with subtitles
     private void playVideoSubtitles(Uri subtitle) {
         long oldPosition = player.getCurrentPosition();
@@ -732,7 +752,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         playError();
     }
 
-//    Check screen orientation and play the video accordingly
+    //    Check screen orientation and play the video accordingly
 //    We pass the screenOrientation method in onCreate
     private void screenOrientation() {
         try {
@@ -777,7 +797,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         player.setPlayWhenReady(true);
     }
 
-//    When user clicks on back button, create if statement below super call for checking if player is playing, then it will stop the player
+    //    When user clicks on back button, create if statement below super call for checking if player is playing, then it will stop the player
     @Override
     public void onBackPressed() {
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.eqFrame);
@@ -796,7 +816,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-//    We will override onPause method - player.setPlayWhenReady() - because when the app pause, the video will also pause through the player.setPlayWhenReady() as false
+    //    We will override onPause method - player.setPlayWhenReady() - because when the app pause, the video will also pause through the player.setPlayWhenReady() as false
 //    The video is in picture in picture mode but is paused. We have to work on onPause method
     @Override
     protected void onPause() {
@@ -812,7 +832,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-//    When our app is resumed again we will play the video
+    //    When our app is resumed again we will play the video
     @Override
     protected void onResume() {
         super.onResume();
@@ -830,7 +850,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //    If you change the orientation of video from portrait to landscape, the audio keeps playing again. So to prevent the app from audio keeps on playing again we will do some code in Manifest.
 //    android:configChanges="orientation|screenSize|layoutDirection" - By using this in AndroidManifest.xml, now our audio will not skip again by changing the orientation and changing screen size or layout direction
 
-//    For hiding status bar, we have to create a method below the onRestart method. We have to call the setFullScreen method in onCreate method.
+    //    For hiding status bar, we have to create a method below the onRestart method. We have to call the setFullScreen method in onCreate method.
     private void setFullScreen() {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -1030,7 +1050,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-//    We used the request code 111, we will override the method in onActivityResult
+    //    We used the request code 111, we will override the method in onActivityResult
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -1046,6 +1066,40 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                     Toast.makeText(getApplicationContext(), "Permission Not Granted (Swipe to Control Brightness & Volume)", Toast.LENGTH_SHORT).show();
                 }
             }
+        }
+    }
+
+//    Call the ScaleDetector class in initViews();
+    private class ScaleDetector extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScale(@NonNull ScaleGestureDetector detector) {
+            scale_factor *= detector.getScaleFactor();
+
+//            6.0f will be the maximum percentage for swiping - 6.0 will be 600%
+//            When user changes the zoom layout the minimum percentage for zoom is 50% and maximum 600%
+//            If you want the minimum to be 40% or 30%, then you can change it to 0.4f or 0.3f
+            scale_factor = Math.max(0.5f, Math.min(scale_factor, 6.0f));
+
+            zoomLayout.setScaleX(scale_factor);
+            zoomLayout.setScaleY(scale_factor);
+//            Create the variable for percentage
+            int percentage = (int) (scale_factor * 100);
+            zoom_percentage.setText(" " + percentage + "%");
+            zoomContainer.setVisibility(View.VISIBLE);
+
+//            When user pinch the screen for Zoom we will hide all the swipe controls
+            brt_text_container.setVisibility(View.GONE);
+            vol_text_container.setVisibility(View.GONE);
+            brt_progress_container.setVisibility(View.GONE);
+            vol_progress_container.setVisibility(View.GONE);
+
+            return true;
+        }
+
+        @Override
+        public void onScaleEnd(@NonNull ScaleGestureDetector detector) {
+            zoomContainer.setVisibility(View.GONE);
+            super.onScaleEnd(detector);
         }
     }
 }
