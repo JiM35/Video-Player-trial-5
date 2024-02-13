@@ -2,12 +2,15 @@ package com.example.videoplayer_trial5;
 
 import android.annotation.SuppressLint;
 import android.app.PictureInPictureParams;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.media.audiofx.AudioEffect;
 import android.net.Uri;
@@ -22,6 +25,8 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -60,17 +65,17 @@ import java.util.ArrayList;
 // ExoPlayer is an alternative to Android's Media Player. By using Media Player it is very easy to play videos but if you want to create advanced player features using media player then it will require much effort for developers - that is why we will use ExoPlayer for creating those advanced features.
 
 public class VideoPlayerActivity extends AppCompatActivity implements View.OnClickListener {
-    //    Now we are getting the video list that we are sending through intent. First create arraylist
+//    Now we are getting the video list that we are sending through intent. First create arraylist
     ArrayList<MediaFiles> mVideoFiles = new ArrayList<>();
 
-    //    Create object for PlayerView and SimpleExoPlayer with variables as playerView and player
+//    Create object for PlayerView and SimpleExoPlayer with variables as playerView and player
     PlayerView playerView;
     SimpleExoPlayer player;
     int position;
     String videoTitle;
     TextView title;
 
-    //    Initialize the Recycler
+//    Initialize the Recycler
 //    Horizontal RecyclerView variables
     private ArrayList<IconModel> iconModelArrayList = new ArrayList<>();
     PlaybackIconsAdapter playbackIconsAdapter;
@@ -108,9 +113,9 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //    Create object for FrameLayout
     FrameLayout eqContainer;
 
-//    Create variables for device height and width
+//    Create int variables for device height and width, brightness
 //    Swipe and zoom variables
-    private int device_height, device_width;
+    private int device_height, device_width, brightness, media_volume;
     boolean start = false;
 //    Create left and right variables
     boolean left, right;
@@ -121,6 +126,15 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     private long diffX, diffY;
     public static final int MINIMUM_DISTANCE = 100;
     boolean success = false;
+    TextView vol_text, brt_text;
+    ProgressBar vol_progress, brt_progress;
+    LinearLayout vol_progress_container, vol_text_container, brt_progress_container, brt_text_container;
+    ImageView vol_icon, brt_icon;
+    AudioManager audioManager;
+//    Create object for ContentResolver
+    private ContentResolver contentResolver;
+    private Window window;
+    boolean singleTap = false;
 
 //    Swipe and zoom variables
 
@@ -176,6 +190,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                 switch (motionEvent.getAction()) {
 //                    ACTION_DOWN will be called when user taps on the screen
                     case MotionEvent.ACTION_DOWN:
+//                        When user is starting the swipe we will show all the controllers of player view
+                        playerView.showController();
                         start = true;
                         if (motionEvent.getX() < device_width / 2) {
                             left = true;
@@ -195,7 +211,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                     case MotionEvent.ACTION_MOVE:
                         swipe_move = true;
                         diffX = (long) Math.ceil(motionEvent.getX() - baseX);
-                        diffY = (long) Math.ceil(motionEvent.getX() - baseY);
+                        diffY = (long) Math.ceil(motionEvent.getY() - baseY);
                         double brightnessSpeed = 0.01;
                         if (Math.abs(diffY) > MINIMUM_DISTANCE) {
                             start = true;
@@ -206,11 +222,79 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                                     value = android.provider.Settings.System.canWrite(getApplicationContext());
                                     if (value) {
 //                                        If the user has access to write then we will check if its left side then we will show a Toast
+//                                        When the user swipes on the left side...
                                         if (left) {
-                                            Toast.makeText(getApplicationContext(), "Left Swipe", Toast.LENGTH_SHORT).show();
-//                                        If it is right side, then Toast will be right swipe
+                                            /* Toast.makeText(getApplicationContext(), "Left Swipe", Toast.LENGTH_SHORT).show(); */
+                                            contentResolver = getContentResolver();
+                                            window = getWindow();
+                                            try {
+                                                android.provider.Settings.System.putInt(contentResolver, android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE, android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+                                                brightness = android.provider.Settings.System.getInt(contentResolver, android.provider.Settings.System.SCREEN_BRIGHTNESS);
+                                            } catch (
+                                                    android.provider.Settings.SettingNotFoundException e) {
+                                                throw new RuntimeException(e);
+                                            }
+                                            int new_brightness = (int) (brightness - (diffY * brightnessSpeed));
+//                                            250 is the total percentage of brightness
+                                            if (new_brightness > 250) {
+                                                new_brightness = 250;
+                                            } else if (new_brightness < 1) {
+                                                new_brightness = 1;
+                                            }
+//                                            We will show the brightness in 100 not 250
+                                            double brt_percentage = Math.ceil((((double) new_brightness / (double) 250) * (double) 100));
+                                            brt_progress_container.setVisibility(View.VISIBLE);
+                                            brt_text_container.setVisibility(View.VISIBLE);
+                                            brt_progress.setProgress((int) brt_percentage);
+
+//                                            If the brightness is less than 30, we will show the icon ic_brightness_low
+                                            if (brt_percentage < 30) {
+//                                                Create two icons for brightness - ic_brightness_low and ic_brightness_moderate
+                                                brt_icon.setImageResource(R.drawable.ic_brightness_low);
+                                            } else if (brt_percentage > 30 && brt_percentage < 80) {
+//                                                If brightness percentage is greater than 30 and less than 80, the the brightness icon will be ic_brightness_moderate
+                                                brt_icon.setImageResource(R.drawable.ic_brightness_moderate);
+                                            } else if (brt_percentage > 80) {
+//                                                If the brightness percentage is greater than 80, we will show ic_brightness_2 - the icon for full brightness
+                                                brt_icon.setImageResource(R.drawable.ic_brightness_2);
+                                            }
+//                                            We will change the percentage for brightness
+                                            brt_text.setText(" " + (int) brt_percentage + "%");
+                                            android.provider.Settings.System.putInt(contentResolver, android.provider.Settings.System.SCREEN_BRIGHTNESS, (new_brightness));
+                                            WindowManager.LayoutParams layoutParams = window.getAttributes();
+                                            layoutParams.screenBrightness = brightness / (float) 255;
+                                            window.setAttributes(layoutParams);
+
+//                                            If it is right side, then Toast will be right swipe
+//                                            In the right swipe we will implement the volume swipe
                                         } else if (right) {
-                                            Toast.makeText(getApplicationContext(), "Right Swipe", Toast.LENGTH_SHORT).show();
+                                            /* Toast.makeText(getApplicationContext(), "Right Swipe", Toast.LENGTH_SHORT).show(); */
+                                            vol_text_container.setVisibility(View.VISIBLE);
+                                            media_volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+//                                            We will get maximum volume by using audioManager.getStreamMaxVolume()
+                                            int maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                                            double cal = (double) diffY * ((double) maxVol / ((double) (device_height * 2) - brightnessSpeed));
+                                            int newMediaVolume = media_volume - (int) cal;
+                                            if (newMediaVolume > maxVol) {
+                                                newMediaVolume = maxVol;
+                                            } else if (newMediaVolume < 1) {
+                                                newMediaVolume = 0;
+                                            }
+                                            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newMediaVolume, AudioManager.FLAG_REMOVE_SOUND_AND_VIBRATE);
+//                                            Create double variable for percentage volume - we will show percentage volume in textview
+                                            double volPer = Math.ceil(((double) newMediaVolume / (double) maxVol) * (double) 100);
+                                            vol_text.setText(" " + (int) volPer + "%");
+//                                            Check if volume percentage is less than 1, then volume icon will be ic_volume_off
+                                            if (volPer < 1) {
+                                                vol_icon.setImageResource(R.drawable.ic_volume_off);
+                                                vol_text.setVisibility(View.VISIBLE);
+                                                vol_text.setText("Off");
+                                            } else if (volPer >= 1) {
+                                                vol_icon.setImageResource(R.drawable.ic_volume);
+                                                vol_text.setVisibility(View.VISIBLE);
+                                            }
+                                            vol_progress_container.setVisibility(View.VISIBLE);
+                                            vol_progress.setProgress((int) volPer);
                                         }
                                         success = true;
                                     } else {
@@ -232,6 +316,11 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //                        When user removes his finger we will take the swipe_move variable as false, also start variable as false
                         swipe_move = false;
                         start = false;
+//                        When user removes finger from screen, then we will change the visibility to gone for vol_progress_container
+                        vol_progress_container.setVisibility(View.GONE);
+                        brt_progress_container.setVisibility(View.GONE);
+                        vol_text_container.setVisibility(View.GONE);
+                        brt_text_container.setVisibility(View.GONE);
                         break;
                 }
                 return super.onTouch(view, motionEvent);
@@ -245,6 +334,15 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
             @Override
             public void onSingleTouch() {
                 super.onSingleTouch();
+                if (singleTap) {
+//                    First when user taps on the screen we will show controllers
+                    playerView.showController();
+                    singleTap = false;
+                } else {
+//                    Then hide all the controllers in second tap
+                    playerView.hideController();
+                    singleTap = true;
+                }
             }
         });
 
@@ -285,6 +383,25 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         recyclerViewIcons = findViewById(R.id.recyclerview_icons);
         eqContainer = findViewById(R.id.eqFrame);
 
+//        Initialize all the views
+        vol_text = findViewById(R.id.vol_text);
+        brt_text = findViewById(R.id.brt_text);
+
+        vol_progress = findViewById(R.id.vol_progress);
+        brt_progress = findViewById(R.id.brt_progress);
+
+        vol_progress_container = findViewById(R.id.vol_progress_container);
+        brt_progress_container = findViewById(R.id.brt_progress_container);
+
+        vol_text_container = findViewById(R.id.vol_text_container);
+        brt_text_container = findViewById(R.id.brt_text_container);
+
+        vol_icon = findViewById(R.id.vol_icon);
+        brt_icon = findViewById(R.id.brt_icon);
+
+//        Initialize audioManager
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
         title.setText(videoTitle);
 
         nextButton.setOnClickListener(this);
@@ -324,7 +441,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 
 
     private void horizontalIconList() {
-        //        Initialize the recyclerview - first we will add the items in list
+//        Initialize the recyclerview - first we will add the items in list
         iconModelArrayList.add(new IconModel(R.drawable.ic_right, ""));
         iconModelArrayList.add(new IconModel(R.drawable.ic_night_mode, "Night"));
         iconModelArrayList.add(new IconModel(R.drawable.ic_pip_mode, "Popup"));
@@ -362,7 +479,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                         if (iconModelArrayList.size() == 5) {
                             iconModelArrayList.add(new IconModel(R.drawable.ic_volume_off, "Mute"));
                             iconModelArrayList.add(new IconModel(R.drawable.ic_volume, "Volume"));
-                            iconModelArrayList.add(new IconModel(R.drawable.ic_brightness, "Brightness"));
+                            iconModelArrayList.add(new IconModel(R.drawable.ic_brightness_2, "Brightness"));
                             iconModelArrayList.add(new IconModel(R.drawable.ic_speed, "Speed"));
                             iconModelArrayList.add(new IconModel(R.drawable.ic_subtitles, "Subtitles"));
                         }
@@ -583,7 +700,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         });
     }
 
-    //    Copy the playVideo method above and paste below the same method. Rename it playVideoSubtitles and make some changes
+//    Copy the playVideo method above and paste below the same method. Rename it playVideoSubtitles and make some changes
 //    This method will be for playing videos with subtitles
     private void playVideoSubtitles(Uri subtitle) {
         long oldPosition = player.getCurrentPosition();
@@ -615,7 +732,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         playError();
     }
 
-    //    Check screen orientation and play the video accordingly
+//    Check screen orientation and play the video accordingly
 //    We pass the screenOrientation method in onCreate
     private void screenOrientation() {
         try {
@@ -660,7 +777,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         player.setPlayWhenReady(true);
     }
 
-    //    When user clicks on back button, create if statement below super call for checking if player is playing, then it will stop the player
+//    When user clicks on back button, create if statement below super call for checking if player is playing, then it will stop the player
     @Override
     public void onBackPressed() {
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.eqFrame);
@@ -695,7 +812,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-    //    When our app is resumed again we will play the video
+//    When our app is resumed again we will play the video
     @Override
     protected void onResume() {
         super.onResume();

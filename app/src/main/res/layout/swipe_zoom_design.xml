@@ -27,7 +27,7 @@
             android:progressDrawable="@drawable/vertical_progress_bar" />
 
         <ImageView
-            android:id="@+id/vol_dialog_icon"
+            android:id="@+id/vol_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_volume" />
@@ -89,7 +89,7 @@
             android:progressDrawable="@drawable/vertical_progress_bar" />
 
         <ImageView
-            android:id="@+id/brt_dialog_icon"
+            android:id="@+id/brt_icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_brightness" />
