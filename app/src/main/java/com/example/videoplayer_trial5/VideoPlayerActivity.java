@@ -66,73 +66,74 @@ import java.util.ArrayList;
 // ExoPlayer is an alternative to Android's Media Player. By using Media Player it is very easy to play videos but if you want to create advanced player features using media player then it will require much effort for developers - that is why we will use ExoPlayer for creating those advanced features.
 
 public class VideoPlayerActivity extends AppCompatActivity implements View.OnClickListener {
-    //    Now we are getting the video list that we are sending through intent. First create arraylist
+//    Now we are getting the video list that we are sending through intent. First create arraylist
     ArrayList<MediaFiles> mVideoFiles = new ArrayList<>();
 
-    //    Create object for PlayerView and SimpleExoPlayer with variables as playerView and player
+//    Create object for PlayerView and SimpleExoPlayer with variables as playerView and player
     PlayerView playerView;
     SimpleExoPlayer player;
     int position;
     String videoTitle;
     TextView title;
 
-    //    Initialize the Recycler
+//    Initialize the Recycler
 //    Horizontal RecyclerView variables
     private ArrayList<IconModel> iconModelArrayList = new ArrayList<>();
     PlaybackIconsAdapter playbackIconsAdapter;
 
-    //    Create object for recyclerview
+//    Create object for recyclerview
     RecyclerView recyclerViewIcons;
     boolean expand = false;
-    //    Create object of View
+//    Create object of View
     View nightMode;
 
-    //    Create boolean value for night_mode
+//    Create boolean value for night_mode
     boolean dark = false;
 
-    //    Create boolean value for Mute
+//    Create boolean value for Mute
     boolean mute = false;
 
-    //    We will create an object for playback parameters
+//    We will create an object for playback parameters
     PlaybackParameters parameters;
 
-    //    Float variable for speed
+//    Float variable for speed
     float speed;
 
-    //    When user clicks subtitles icon, we are going to use file picker library for showing directories
+//    When user clicks subtitles icon, we are going to use file picker library for showing directories
 //    We will create object for DialogProperties
     DialogProperties dialogProperties;
     FilePickerDialog filePickerDialog;
 
-    //    Create object for Uri
+//    Create object for Uri
     Uri uriSubtitles;
 
-    //    Create object for picture in picture
+//    Create object for picture in picture
     PictureInPictureParams.Builder pictureInPicture;
 
     boolean isCrossChecked;
-    //    Create object for FrameLayout
+//    Create object for FrameLayout
     FrameLayout eqContainer;
 
-    //    Create int variables for device height and width, brightness
+//    Create int variables for device height and width, brightness
 //    Swipe and zoom variables
     private int device_height, device_width, brightness, media_volume;
     boolean start = false;
-    //    Create left and right variables
+//    Create left and right variables
     boolean left, right;
-    //    Create base x and y float variables
+//    Create base x and y float variables
     private float baseX, baseY;
     boolean swipe_move = false;
-    //    Create long variable for difference X and difference Y
+//    Create long variable for difference X and difference Y
     private long diffX, diffY;
     public static final int MINIMUM_DISTANCE = 100;
     boolean success = false;
-    TextView vol_text, brt_text;
+//    Initialize TextView
+    TextView vol_text, brt_text, total_duration;
     ProgressBar vol_progress, brt_progress;
     LinearLayout vol_progress_container, vol_text_container, brt_progress_container, brt_text_container;
     ImageView vol_icon, brt_icon;
     AudioManager audioManager;
-    //    Create object for ContentResolver
+//    Create object for ContentResolver
     private ContentResolver contentResolver;
     private Window window;
     boolean singleTap = false;
@@ -147,7 +148,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     private float scale_factor = 1.0f;
 //    Create boolean variable
     boolean double_tap = false;
-    //    Initialize RelativeLayout
+//    Initialize RelativeLayout
     RelativeLayout double_tap_play_pause;
 
 //    Swipe and zoom variables
@@ -158,13 +159,13 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         LOCK, FULLSCREEN
     }
 
-    //    Create object for ImageView
+//    Create object for ImageView
 //    Create variable for video playlist - name it as videoList
     ImageView videoBack, lock, unlock, scaling, videoList;
 
-    //    Create object for VideoFilesAdapter
+//    Create object for VideoFilesAdapter
     VideoFilesAdapter videoFilesAdapter;
-    //    Create object for RelativeLayout, take the variable as root
+//    Create object for RelativeLayout, take the variable as root
     RelativeLayout root;
     ConcatenatingMediaSource concatenatingMediaSource;
     ImageView nextButton, previousButton;
@@ -177,6 +178,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         setContentView(R.layout.activity_video_player);
 //        Now we have to get position and arraylist of video from VideoFilesAdapter using Intent
         getSupportActionBar().hide();
+        hideBottomBar();
 //        Allocate memory to playerView
         playerView = findViewById(R.id.exoplayer_view);  // This id exoplayer_view - has been passed in activity_video_player
         position = getIntent().getIntExtra("position", 1);  // Select getIntExtra because the data type of position is int. In quotes, pass the key that you are using for sending the position.
@@ -383,6 +385,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
     private void initViews() {
         nextButton = findViewById(R.id.exo_next);
         previousButton = findViewById(R.id.exo_prev);
+        total_duration = findViewById(R.id.exo_duration);
         title = findViewById(R.id.video_title);
 //        Declare the RelativeLayout with id root_layout in custom_playback_view.xml.
 //        Allocate memory by using id.
@@ -391,6 +394,8 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         unlock = findViewById(R.id.unlock);
 //        Allocate memory to scaling
         scaling = findViewById(R.id.scaling);
+        double milliseconds = Double.parseDouble(mVideoFiles.get(position).getDuration());
+        total_duration.setText(Utility.timeConversion((long) milliseconds));
 
 //        Initialize the file picker objects for showing directories when user clicks on subtitles
         dialogProperties = new DialogProperties();
@@ -870,10 +875,21 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 //    If you change the orientation of video from portrait to landscape, the audio keeps playing again. So to prevent the app from audio keeps on playing again we will do some code in Manifest.
 //    android:configChanges="orientation|screenSize|layoutDirection" - By using this in AndroidManifest.xml, now our audio will not skip again by changing the orientation and changing screen size or layout direction
 
-    //    For hiding status bar, we have to create a method below the onRestart method. We have to call the setFullScreen method in onCreate method.
+//    For hiding status bar, we have to create a method below the onRestart method. We have to call the setFullScreen method in onCreate method.
     private void setFullScreen() {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    }
+
+    public void hideBottomBar() {
+        if (Build.VERSION.SDK_INT > 11 && Build.VERSION.SDK_INT < 19) {
+            View view = this.getWindow().getDecorView();
+            view.setSystemUiVisibility(View.GONE);
+        } else if (Build.VERSION.SDK_INT >= 19) {
+            View decodeView = getWindow().getDecorView();
+            int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            decodeView.setSystemUiVisibility(uiOptions);
+        }
     }
 
     /*
@@ -986,20 +1002,24 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
             Toast.makeText(this, "Locked", Toast.LENGTH_SHORT).show();
 
         } else if (viewId == R.id.exo_next) {
+//            When user clicks on exo_next, we will also change the display name of video
             try {
                 player.stop();
                 position++;
                 playVideo();
+                title.setText(mVideoFiles.get(position).getDisplayName());
             } catch (Exception e) {
                 Toast.makeText(this, "No Next Video", Toast.LENGTH_SHORT).show();
                 finish();
             }
 
         } else if (viewId == R.id.exo_prev) {
+//            When user clicks on previous button we will also change the display name of video
             try {
                 player.stop();
                 position--;
                 playVideo();
+                title.setText(mVideoFiles.get(position).getDisplayName());
             } catch (Exception e) {
                 Toast.makeText(this, "No Previous Video", Toast.LENGTH_SHORT).show();
                 finish();

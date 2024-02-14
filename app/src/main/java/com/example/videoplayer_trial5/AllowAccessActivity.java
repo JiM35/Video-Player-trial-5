@@ -1,6 +1,7 @@
 package com.example.videoplayer_trial5;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -12,15 +13,20 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.android.exoplayer2.util.Util;
+
 public class AllowAccessActivity extends AppCompatActivity {
 
     public static final int STORAGE_PERMISSION = 1;
+    public static final int STORAGE_PERMISSION_ABOVE_10 = 123;
     Button allow_btn;
     public static final int REQUEST_PERMISSION_SETTING = 12;
     @Override
@@ -47,13 +53,33 @@ public class AllowAccessActivity extends AppCompatActivity {
         allow_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                    // First we have to check if user granted permission or not.
-                    // If user granted permission we will navigate the user from this activity to Main Activity by using Intent.
-                    startActivity(new Intent(AllowAccessActivity.this, MainActivity.class));
-                    finish();
-                } else {  // In else statement if user deny that prompt then we will again show that prompt.
-                    ActivityCompat.requestPermissions(AllowAccessActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, STORAGE_PERMISSION);  // Create a request code - STORAGE_PERMISSION
+                if (Util.SDK_INT < Build.VERSION_CODES.R) {  // It means it includes all the devices till android 10
+                    if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                        // First we have to check if user granted permission or not.
+                        // If user granted permission we will navigate the user from this activity to Main Activity by using Intent.
+                        startActivity(new Intent(AllowAccessActivity.this, MainActivity.class));
+                        finish();
+                    } else {  // In else statement if user deny that prompt then we will again show that prompt.
+                        ActivityCompat.requestPermissions(AllowAccessActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, STORAGE_PERMISSION);  // Create a request code - STORAGE_PERMISSION
+                    }
+                } else {  // In else condition we have devices above android 10 - that can be android 11 and 12
+                    if (Environment.isExternalStorageManager()) {
+                        startActivity(new Intent(AllowAccessActivity.this, MainActivity.class));
+                        finish();
+                    } else {  // If the storage permission is not permitted then we will navigate the user to storage. For this we will use try catch block
+                        try {
+                            Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                            intent.addCategory("android.intent.category.DEFAULT");
+                            Uri uri = Uri.fromParts("package", getPackageName(), null);
+                            intent.setData(uri);
+                            startActivityForResult(intent, STORAGE_PERMISSION_ABOVE_10);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Intent intent = new Intent();
+                            intent.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                            startActivityForResult(intent, STORAGE_PERMISSION_ABOVE_10);
+                        }
+                    }
                 }
             }
         });
@@ -91,6 +117,15 @@ public class AllowAccessActivity extends AppCompatActivity {
             }
         }
     }  // We cannot navigate to MainActivity because the app is paused so after coming back to this Activity on resume method is called. Let's work on Resume method
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode==STORAGE_PERMISSION_ABOVE_10) {  // Move the user to MainActivity
+            startActivity(new Intent(AllowAccessActivity.this, MainActivity.class));  // Code copied from above
+            finish();
+        }
+    }
 
     @Override
     protected void onResume() {

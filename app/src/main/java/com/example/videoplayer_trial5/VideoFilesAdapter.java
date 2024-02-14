@@ -59,7 +59,7 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
         String size = videoList.get(position).getSize();  // The size variable will return the size of video in bytes.
         holder.videoSize.setText(android.text.format.Formatter.formatFileSize(context, Long.parseLong(size)));  // Now we have to change the byte size to MB or KB using formatter.
         double milliSeconds = Double.parseDouble(videoList.get(position).getDuration());  // This variable contains the duration of video in milliseconds. We have to change the milliseconds into hours, minutes and seconds according to the duration of video. For this we have to create a method - timeConversion
-        holder.videoDuration.setText(timeConversion((long) milliSeconds));  // We will get the duration in milliseconds. Long value we will pass milliseconds
+        holder.videoDuration.setText(Utility.timeConversion((long) milliSeconds));  // We will get the duration in milliseconds. Long value we will pass milliseconds
         Glide.with(context).load(new File(videoList.get(position).getPath())).into(holder.thumbnail);  // For getting the thumbnail, we will use glide - that is image loading format
 
         if (viewType == 0) {
@@ -229,7 +229,7 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
                             String three = "Size: " + android.text.format.Formatter.formatFileSize(context, Long.parseLong(videoList.get(position).getSize()));
 
 //                        We will get the forth property of video file. The forth property will be length of video file
-                            String four = "Length: " + timeConversion((long) milliSeconds);  // We will get length of video file from using the timeConversion method
+                            String four = "Length: " + Utility.timeConversion((long) milliSeconds);  // We will get length of video file from using the timeConversion method
 
 //                        The fifth property is format of video file
                             String nameWithFormat = videoList.get(position).getDisplayName();  // The getDisplayName contains the video file name with extension. We will separate the extension and show in fifth variable
@@ -312,6 +312,7 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
         }
     }
 
+    /**
 //    We have to change the milliseconds into hours, minutes and seconds according to the duration of video. For this we have to create a method - timeConversion
     @SuppressLint("DefaultLocale")
     public String timeConversion(long value) {
@@ -327,6 +328,7 @@ public class VideoFilesAdapter extends RecyclerView.Adapter<VideoFilesAdapter.Vi
         }
         return videoTime;
     }
+     **/
 
     @SuppressLint("NotifyDataSetChanged")
     void updateVideoFiles(ArrayList<MediaFiles> files) {

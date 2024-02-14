@@ -11,29 +11,31 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#000000"
+        app:buffered_color="@color/teal_200"
         app:controller_layout_id="@layout/custom_playback_view"
-        app:hide_on_touch="true"
+        app:hide_on_touch="false"
         app:player_layout_id="@layout/exo_layout_view"
         app:resize_mode="fit"
+        app:show_buffering="when_playing"
         app:show_timeout="4000"
         app:shutter_background_color="#000000"
         app:surface_type="surface_view"
         app:use_controller="true" />
 
     <View
+        android:id="@+id/night_mode"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/night_mode"
         android:background="@color/light_dark"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
     <FrameLayout
-        android:layout_width="match_parent"
-        android:background="@android:color/transparent"
-        android:layout_alignParentBottom="true"
-        android:visibility="gone"
         android:id="@+id/eqFrame"
-        android:layout_height="400dp" />
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:layout_alignParentBottom="true"
+        android:background="@android:color/transparent"
+        android:visibility="gone" />
 
 
     <!--Deleted-->

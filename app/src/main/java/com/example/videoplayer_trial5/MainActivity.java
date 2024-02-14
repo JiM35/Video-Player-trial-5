@@ -36,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        /**
         if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
 //            If the user grants the permission by manually going to settings and again user deny the permission in settings and go back to the app, the onResume method will call and that will navigate the user to MainActivity. We will check if permission is denied, then we will send user again to the settings.
             Toast.makeText(this, "Click on permissions and allow storage", Toast.LENGTH_SHORT).show();
@@ -44,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
             intent.setData(uri);
             startActivityForResult(intent, REQUEST_PERMISSION_SETTING);
         }
+        **/
+
 //        Below if statement we have to allocate memory to recyclerView using id
         recyclerView = findViewById(R.id.folders_rv);
 //        Allocate memory to swipeRefreshLayout
