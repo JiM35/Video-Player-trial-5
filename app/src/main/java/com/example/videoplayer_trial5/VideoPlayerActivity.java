@@ -3,6 +3,7 @@ package com.example.videoplayer_trial5;
 import android.annotation.SuppressLint;
 import android.app.PictureInPictureParams;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -16,9 +17,11 @@ import android.media.audiofx.AudioEffect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Rational;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -27,6 +30,7 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -161,7 +165,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 
 //    Create object for ImageView
 //    Create variable for video playlist - name it as videoList
-    ImageView videoBack, lock, unlock, scaling, videoList;
+    ImageView videoBack, lock, unlock, scaling, videoList, videoMore;
 
 //    Create object for VideoFilesAdapter
     VideoFilesAdapter videoFilesAdapter;
@@ -415,6 +419,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         nightMode = findViewById(R.id.night_mode);
 //        Give the id to videoList - for showing list of videos in a folder (playlist)
         videoList = findViewById(R.id.video_list);
+        videoMore = findViewById(R.id.video_more);
 //        Allocate memory to recyclerview
         recyclerViewIcons = findViewById(R.id.recyclerview_icons);
         eqContainer = findViewById(R.id.eqFrame);
@@ -456,6 +461,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         unlock.setOnClickListener(this);
 //        Set setOnClickListener on videoList (for showing playlist)
         videoList.setOnClickListener(this);
+        videoMore.setOnClickListener(this);
         scaling.setOnClickListener(firstListener);  // Pass the View name
     }
 
@@ -1024,6 +1030,141 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                 Toast.makeText(this, "No Previous Video", Toast.LENGTH_SHORT).show();
                 finish();
             }
+
+        } else if (viewId == R.id.video_more) {
+//            On clicking video_more we will open a popup menu - first we create a menu file for this
+//            Create object for popup menu
+            PopupMenu popupMenu = new PopupMenu(VideoPlayerActivity.this, videoMore);
+            popupMenu.inflate(R.menu.player_menu);
+            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem menuItem) {
+                    int itemId = menuItem.getItemId();
+                    if (itemId == R.id.next) {  // The first item is next
+//                            When user clicks on next button we will simply perform click on next button
+                            nextButton.performClick();
+                    } else if (itemId == R.id.send_video) {
+//                            When user clicks on send we will share the video. Copy the share video code from VideoFilesAdapter
+                            Uri uri = Uri.parse(mVideoFiles.get(position).getPath());
+                            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                            shareIntent.setType("video/*");
+                            shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+                            startActivity(Intent.createChooser(shareIntent, "Share Video via"));
+                    } else if (itemId == R.id.properties) {
+                            double milliSeconds = Double.parseDouble(mVideoFiles.get(position).getDuration());  // For getting duration in milliseconds
+//                        When user will click on properties of video, we will show AlertDialog for showing all the properties
+                            android.app.AlertDialog.Builder alertDialog = new android.app.AlertDialog.Builder(VideoPlayerActivity.this);
+                            alertDialog.setTitle("Properties");
+
+
+//                        We will get all the properties of video files
+//                        Create String variable for getting first property
+                            String one = "File: " + mVideoFiles.get(position).getDisplayName(); // Static text will be file because first property is file name
+
+//                        Second, we will show the path of that file
+                            String path = mVideoFiles.get(position).getPath();  // Here we are getting the complete path of video file with video name and extension
+                            int indexOfPath = path.lastIndexOf("/");  // Here using lastIndexOf and substring we are cutting the video file and extension and the variable two will contain only the path of video file without video name.
+//                        Second property of video files - path
+                            String two = "Path: " + path.substring(0, indexOfPath);
+
+//                        The third variable will be size of video file.
+//                        We will get the size of video file using Formatter. Press Ctrl and click on size. We are getting the size variable (above) that contains the size of video file.
+                            /** String three = "Size: " + android.text.format.Formatter.formatFileSize(context, size); */
+//                        We can also write:
+                            String three = "Size: " + android.text.format.Formatter.formatFileSize(VideoPlayerActivity.this, Long.parseLong(mVideoFiles.get(position).getSize()));
+
+//                        We will get the forth property of video file. The forth property will be length of video file
+                            String four = "Length: " + Utility.timeConversion((long) milliSeconds);  // We will get length of video file from using the timeConversion method
+
+//                        The fifth property is format of video file
+                            String nameWithFormat = mVideoFiles.get(position).getDisplayName();  // The getDisplayName contains the video file name with extension. We will separate the extension and show in fifth variable
+                            int index = nameWithFormat.lastIndexOf(".");
+                            String format = nameWithFormat.substring(index + 1);  // The index + 1 will get extension of video file that will be stored in format variable and we set the format variable to fifth property.
+                            String five = "Format: " + format;
+
+//                        Get the sixth property of video file
+                            MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+                            mediaMetadataRetriever.setDataSource(mVideoFiles.get(position).getPath());
+                            String height = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);  // First we get height of video
+                            String width = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);  // Create second variable for getting the width of video
+                            String six = "Resolution: " + width + "x" + height;  // Set the width and height here. "x" will represent multiply
+
+
+//                        We will pass all the variables one, two, three, four, five and six. These are the six properties of video file, we will set all these properties in setMessage
+                            alertDialog.setMessage(one + "\n\n" + two + "\n\n" + three + "\n\n" + four + "\n\n" + five + "\n\n" + six);  // In setMessage, we have to show all the properties of video files one by one
+                            alertDialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+//                                When user clicks on OK button after checking all the properties of that video file we will dismiss the AlertDialog
+                                    dialogInterface.dismiss();
+                                }
+                            });
+                            alertDialog.show();
+                    } else if (itemId == R.id.delete) {
+//                            When user clicks on delete, the playing video will be deleted and next video will be played
+//                            We will show AlertDialog with two buttons, DELETE and CANCEL, when user click on delete video
+                            android.app.AlertDialog.Builder alertDialogDelete = new android.app.AlertDialog.Builder(VideoPlayerActivity.this);
+                            alertDialogDelete.setTitle("Delete");
+                            alertDialogDelete.setMessage("Do you want to delete this video?");
+                            alertDialogDelete.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    Uri contentUri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, Long.parseLong(mVideoFiles.get(position).getId()));
+                                    File file = new File(mVideoFiles.get(position).getPath());  // Get the path of video that you want to delete
+                                    boolean delete = file.delete();
+
+//                                Check if the file is deleted or not using if statement
+                                    if (delete) {
+//                                    If the file is deleted we creaate context
+                                        getContentResolver().delete(contentUri, null, null);
+                                        mVideoFiles.remove(position);
+//                                        When user clicks on delete, the playing video will be deleted and next video will be played
+//                                        To play the next video we have to perform click on next button when user deletes a video
+                                        nextButton.performClick();
+                                        Toast.makeText(VideoPlayerActivity.this, "Video Deleted", Toast.LENGTH_SHORT).show();
+                                    } else {
+//                                    In else statement if video is not deleted we have to show Toast
+                                        Toast.makeText(VideoPlayerActivity.this, "Video cannot be Deleted", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            });
+//                        Not we work on delete button that will be CANCEL
+                            alertDialogDelete.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+//                                When user clicks on cancel, dialog will dismiss
+                                    dialogInterface.dismiss();
+                                }
+                            });
+                            alertDialogDelete.show();
+                    } else if (itemId == R.id.subtitles) {
+//                            If user clicked on subtitle icon
+//                            First we are going to use file picker library for showing the directories
+//                            If we write DialogConfigs.MULTI_MODE it will mean user can select more than one file but we do not want user to select more than one file that is why we will use DialogConfigs.SINGLE_MODE
+                            dialogProperties.selection_mode = DialogConfigs.SINGLE_MODE;
+//                            Now we will select the extension. Subtitle file will be in .srt extension
+                            dialogProperties.extensions = new String[]{".srt"};
+//                            Here we write the default path
+                            dialogProperties.root = new File("/storage/emulated/0");
+                            filePickerDialog.setProperties(dialogProperties);
+                            filePickerDialog.show();
+//                            After user will select a subtitle file we will write code here
+                            filePickerDialog.setDialogSelectionListener(new DialogSelectionListener() {
+                                @Override
+                                public void onSelectedFilePaths(String[] files) {
+                                    for (String path : files) {
+//                                        Object of file
+                                        File file = new File(path);
+                                        uriSubtitles = Uri.parse(file.getAbsolutePath().toString());
+                                    }
+                                    playVideoSubtitles(uriSubtitles);
+                                }
+                            });
+                    }
+                    return true;
+                }
+            });
+            popupMenu.show();
         }
     }
 
